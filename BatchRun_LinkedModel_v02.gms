@@ -18,7 +18,7 @@ $SETGLOBAL GDXoutfolder2 %workingfolder%GDXCGEout\
 $SETGLOBAL referencerun CIPP_REF0_5Y
 *$SETGLOBAL referencerun PAMS_BFUEL
 $SETGLOBAL outputworkbook outputworkbook_v08.xlsx
-
+$SETGLOBAL MCSIMworkbook MCSimTra3.xlsm
 *-------------------------------------------------------------------------------
 
 *2.Defining sets and parameters used in Batch file------------------------------
@@ -373,7 +373,7 @@ Alias (MILESTONYR,MY), (P,PP); ;
 *-------------------------------------------------------------------------------
 
 *5 Import MC parameters and data from spreadsheet-------------------------------
-$call   "gdxxrw i=MCSim.xlsm o=mcsim index=index!a6 checkdate"
+$call   "gdxxrw i=%MCSIMworkbook% o=mcsim index=index!a6 checkdate"
 $gdxin  mcsim.gdx
 $loaddc RUN FUELP FUELPO FUELPC FUELPCPWR FUELPCPWR_CB FUELPCPWR_A FUELPG TECHS TECHN TECHC TECHP ETC ETCA ETG ETGIH ETN ERH ERSOLP ERSOLPC ERSOLPR ERSOLT ERW ERB CO2SET FS FuelPrices UXLE_AB TIMESCASE INCLRUN
 $load MRUNCASE PamsSector GDP_FS_L SIM_POP SIM_GDP_Y SIM_COM_S SIM_GCOAL SIM_GGAS SIM_GOIL OCRFAC COAL_CV SIM_CLE1 SIM_CLE2 SIM_CLN SIM_CLE_A SIM_CLN_A SIM_CLNU_A SIM_GIH PV_CRATIO SIM_PV_MODULE SIM_PV_BOS CSP_CRATIO
