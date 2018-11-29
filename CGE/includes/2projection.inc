@@ -168,36 +168,8 @@ LOOP(TC$(NOT TPAST(TC)),
  POPAD(H,XC,TC)$SPOP(XC,TC-1)        = POPAD(H,XC,TC-1) + SPOPAD(H,XC);
 );
 
-*FH
- Parameter
- DUMTIME(T);
-
-* DUMTIME(T) = 0;
- DUMTIME(T) = 1;
- DUMTIME('2013') = 0;
- DUMTIME('2014') = 0;
- DUMTIME('2015') = 0;
- DUMTIME('2016') = 0;
- DUMTIME('2017') = 0;
- DUMTIME('2018') = 0;
- DUMTIME('2019') = 0;
- DUMTIME('2020') = 0;
- DUMTIME('2021') = 0;
- DUMTIME('2022') = 0;
- DUMTIME('2023') = 0;
- DUMTIME('2024') = 0;
- DUMTIME('2025') = 0;
- DUMTIME('2026') = 0;
- DUMTIME('2027') = 0;
- DUMTIME('2028') = 0;
- DUMTIME('2029') = 0;
- DUMTIME('2030') = 0;
-
-
 *Add cumulative acceleration or deceleration rates to annual long-term growth rates
-*FH: Change deceleration for IFPRI and COBEN
-* TFPPROJ(A,RD,XC,TC)    = TFPPROJ(A,RD,XC,TC)    + TFPAD(A,RD,XC,TC);
- TFPPROJ(A,RD,XC,TC)    = TFPPROJ(A,RD,XC,TC)    + TFPAD(A,RD,XC,TC)*DUMTIME(TC);
+ TFPPROJ(A,RD,XC,TC)    = TFPPROJ(A,RD,XC,TC)    + TFPAD(A,RD,XC,TC);
  FPRDPROJ(F,XC,TC)      = FPRDPROJ(F,XC,TC)      + FPRDAD(F,XC,TC);
  FACPROJ(F,XC,TC)       = FACPROJ(F,XC,TC)       + FACAD(F,XC,TC);
  WPROJ(F,XC,TC)         = WPROJ(F,XC,TC)         + WAD(F,XC,TC);

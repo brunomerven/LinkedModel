@@ -43,6 +43,7 @@ SETS
 
  PWR(COM) fuels to power
  XELC(PRC) transmission and distribution technologies
+ COALSUP(PRC) detailed coal supply techs
 
 * sets used for reverse mapping of households
 *FH*----------------------------------------------------------------------------
@@ -86,7 +87,7 @@ $call    "gdxxrw i=.\links\0forecast.xlsx o=forecast index=index!a6"
 $gdxin   forecast.gdx
 
 
-$load TIEPG FSATIM FH FT XELC
+$load TIEPG FSATIM FH FT XELC COALSUP
 
 
 * set sectors that are linked with the main ica calc approach
@@ -185,7 +186,14 @@ PARAMETER
  TCST_INVC(REG,AY,PRC) TIMES calculated annual investment costs
  TCST_ACTC(REG,AY,PRC) TIMES calculated annual activity costs
  TCST_FIXC(REG,AY,PRC) TIMES calculated annual fixed costs
+ TCST_ELE_I(RUN,AY) ELC total inv costs
+ TCST_ELE_A(RUN,AY) ELC total act costs
+ TCST_ELE_F(RUN,AY) ELC total F costs
+ TCST_ELE_X(RUN,AY) ELC total TDX costs
 
+ TCST_COALSUP(RUN,AY) Total costs from detailed coal supply model
+
+ ELC_FLOW(RUN,AY) Electricity flows used as denominator in elc price calculation
 * CO2 in power sector
 TPWRCLE(AY) TIMES calculated annual coal use in power sector (PJ)
 TPWRCLETAX(AY) TIMES calculated CO2 tax

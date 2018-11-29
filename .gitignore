@@ -1,0 +1,18 @@
+
+*.~gm
+*.gpr
+*.~in
+CGE/includes/SATM_GE.sublime-workspace
+CGE/includes/CGE_Report_Short - Copy.inc
+*.xlsx
+CGE/0project.dat
+*.log
+*.lst
+*.lxi
+*.~da
+*.gdx
+*.g00
+*.opt
+*.xlsm
+*.sublime-workspace
+*.sublime-project

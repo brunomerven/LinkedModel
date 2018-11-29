@@ -85,7 +85,7 @@ SET
  MCO2(CO2AC,AC) /
   eELEC.(CELEC)
   ePETR.(CPETR)
-  eAGR .(CAGRI,CBIOM,CFORE,CFISH)
+  eAGR .(CAGRI,CFORE,CFISH)
   eIND .(CCOAL,CCOIL,CNGAS,CMORE,CMINE,CHYDR,CFOOD,CBEVT,CTEXT,CCLTH,CLEAT,CFOOT,CWOOD,CPAPR,CPRNT,CPETR,CBCHM,COCHM,CRUBB,CPLAS,CGLAS,CNMET,CIRON,CNFRM,CMETP,CMACH,CEMCH,CSEQU,CVEHI,CTEQU,CFURN,COMAN,CELEC,CWATR,CCONS)
   eSRV .(CTRAD,CHOTL,CPTRP-L,CFTRP-L,CTRPS-L,CPTRP-O,CFTRP-O,CTRPS-O,CCOMM,CFSRV,CBSRV,CGSRV,COSRV)
   eHHD .(HHD-0,HHD-1,HHD-2,HHD-3,HHD-4,HHD-5,HHD-6,HHD-7,HHD-8,HHD-91,HHD-92,HHD-93,HHD-94,HHD-95)
@@ -162,7 +162,7 @@ PARAMETER
  REPYRS(TRN) = 1;
 
 SETS
- energy(c)       energy commodities     /cbiom, ccoal-dis, ccoal-low, ccoal-hgh, ccoil, cngas, cpetr, celec/
+ energy(c)       energy commodities     /ccoal-dis, ccoal-low, ccoal-hgh, ccoil, cngas, cpetr, celec/
  nonenergy(c)    non-energy commodities
  food(c)         food commodities        /cagri, cfish, cfood, cbevt/
  transport(c)    transport commodities   /CPTRP-L,CFTRP-L,CTRPS-L,CPTRP-O,CFTRP-O,CTRPS-O/
