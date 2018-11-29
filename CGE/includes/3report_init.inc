@@ -162,7 +162,7 @@ PARAMETER
  REPYRS(TRN) = 1;
 
 SETS
- energy(c)       energy commodities     /ccoal-dis, ccoal-low, ccoal-hgh, ccoil, cngas, cpetr, celec/
+ energy(c)       energy commodities     / ccoal-dis, ccoal-low, ccoal-hgh, ccoil, cngas, cpetr, celec/
  nonenergy(c)    non-energy commodities
  food(c)         food commodities        /cagri, cfish, cfood, cbevt/
  transport(c)    transport commodities   /CPTRP-L,CFTRP-L,CTRPS-L,CPTRP-O,CFTRP-O,CTRPS-O/

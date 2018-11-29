@@ -7,19 +7,21 @@
 *1.Set directories*-------------------------------------------------------------
 $SETGLOBAL workingfolder C:\SATIMGE_02\
 $SETGLOBAL Rworkingfolder C:/SATIMGE_02/
-* TIMES GDX output folder
-$SETGLOBAL TIMESfolder Gams_WrkTI-PAMS
-*$SETGLOBAL TIMESfolder Gams_WrkTI-IFPRI
+
+* TIMES GDX output folder (note when creating a new folder copy cplex.opt, RUNTIMES.cmd and RUNTIMES2.cmd, and all .BU files into new folder
+$SETGLOBAL TIMESfolder Gams_WrkTI-ANNUAL
+*$SETGLOBAL TIMESfolder Gams_WrkTI-5Y
+
+$SETGLOBAL MCSIMworkbook MCSim.xlsm
+
 $SETGLOBAL gdxfolder %workingfolder%SATM\%TIMESfolder%\Gamssave\
 * Subset of TIMES GDX output folder
 $SETGLOBAL GDXoutfolder %workingfolder%GDXout\
 $SETGLOBAL GDXoutfolder2 %workingfolder%GDXCGEout\
 
-*Annual runs:
-$SETGLOBAL referencerun REF-BU-CS-A
-*the older one: REFU-BU2_CS_A
-*5year run:
-*$SETGLOBAL referencerun REFU-BU2_CS_5Y
+*Note reference run must have the same milestone years as runs used in batch. The current thinking is to put 5Y and ANNUAL runs in different Gams_WrkTI folders and keep reference run
+$SETGLOBAL referencerun REF
+
 
 *$SETGLOBAL referencerun PAMS_BFUEL
 $SETGLOBAL outputworkbook outputworkbook_v08.xlsx
@@ -608,7 +610,7 @@ ELSE
   execute_unload "MCDem.gdx" POPSX GDP_FSX TRAMOD;
   execute 'gdxxrw.exe i=MCDem.gdx o=.\SATM\DMD_PRJ.xlsx index=index_G2E!a6';
 
-  execute 'gdxxrw.exe i=.\SATM\DMD_PRJ.xlsx o=mcdem2.gdx index=index_E2G!a6 checkdate';
+  execute 'gdxxrw.exe i=.\SATM\DMD_PRJ.xlsx o=mcdem2.gdx index=index_E2G!a6';
   execute_load "mcdem2.gdx" SIM_DEMX Passengerkm Tonkm;
 
 * Demand DDS File

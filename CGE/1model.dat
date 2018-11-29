@@ -259,8 +259,9 @@ $offtext
  SAM(AC,'TOTAL') = SUM(ACNT, SAM(AC,ACNT));
  SAMBALCHK(AC)   = SAM('TOTAL',AC) - SAM(AC,'TOTAL');
 
-*bm/sr/fh calling 1sambal to cleanout small errors
+*bm/sr/fh calling 1sambal to cleanout small errors   
 $INCLUDE includes\1sambal.inc
+
 
 *Define mapping set MAC
  MAC(A,C)        = NO;
@@ -343,6 +344,8 @@ LOOP (F$FD(F),
 *Factor employment is equal to SAM value
    QFBASE(F,ARD)$(NOT FCAP(F)) = SAM(F,ARD);
    QFBASE(F,ARD)$FCAP(F) = SAM(F,ARD)*capoutrat;
+*bm/sr/fh - possible different approach for avoiding the use of alphainv
+*   QFBASE(F,ARD)$FCAP(F) = SAM(F,ARD)*capoutrat*2.078095;
   );
 
   IF (FDATATYPE(F,'DATA') EQ 2,
@@ -512,3 +515,6 @@ $offtext
  QPROD('AELEC','GAS') = CALIB('AELEC-GAS','QA')/1000;
  QPROD('AELEC','DIE') = CALIB('AELEC-DIE','QA')/1000;
  QPROD('AELEC','NAT') = QPROD('AELEC','CDS') + QPROD('AELEC','CLW') + QPROD('AELEC','NUC') + QPROD('AELEC','HYD') + QPROD('AELEC','SPV') + QPROD('AELEC','STH') + QPROD('AELEC','WND') + QPROD('AELEC','GEO') + QPROD('AELEC','WAS') + QPROD('AELEC','GAS') + QPROD('AELEC','DIE');
+
+
+*display '*#* SAM at bottom of 1model.dat', SAM;

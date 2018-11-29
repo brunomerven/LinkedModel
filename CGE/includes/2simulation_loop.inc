@@ -2,8 +2,6 @@
 *Loop over simulations
 LOOP(XC$(NOT fail),
 
-*Clear TIMES data from previous set of runs
-*$include cge\includes\2ClearTIMESData.inc
 
     execute_load "mcdem_start.gdx" MFHHT SFORE_X TFHPOP_X SIM_DEMX PKMFH Passengerkm Tonkm;
 *    MFHHT(FH,H,'2045') = MFHHT(FH,H,'2040');
@@ -73,9 +71,10 @@ $include cge\includes\2runTIMES.inc
  PFLOW('NAT',XC,TC,TT) = SUM(RDNT, PFLOW(RDNT,XC,TC,TT));
 
  ECAP('NAT',XC,TC,TT) = SUM(RDNT, ECAP(RDNT,XC,TC,TT));
-
+ PCAP('NAT',XC,TC,TT) = SUM(RDNT, PCAP(RDNT,XC,TC,TT));
 *Electricity and petroleum build plan projection
- ECAPGR('nat',XC,TC,TT)$ECAP('nat',XC,TC-1,TT) = ECAP('nat',XC,TC,TT)/ECAP('nat',XC,TC-1,TT)-1;
+*bm+fh 201118 removed - already in 2runtimes.inc !!!! note that ECAP and PCAP are also calculated in 2runTIMES, we need to clean this out
+* ECAPGR('nat',XC,TC,TT)$ECAP('nat',XC,TC-1,TT) = ECAP('nat',XC,TC,TT)/ECAP('nat',XC,TC-1,TT)-1;
 
 
 * Extract fuel inputs from SATIM
@@ -93,6 +92,9 @@ $include cge\includes\2runTIMES.inc
 *   CA calculate units of capital required given capacity from times (units not consistent with CGE)
     EAFXCAP(RDNT,XC,TC,TT)$(EFX(TT,TC) AND ifa('FEGY','AELEC',RDNT)) = ifa('FEGY','AELEC',RDNT)*iva('AELEC',RDNT)*ECAP(RDNT,XC,TC,TT);
     EAFXCAP('NAT',XC,TC,TT)$EFX(TT,TC)  = SUM(RDNT,EAFXCAP(RDNT,XC,TC,TT));
+*bm+fh 201118 removed - already in 2runtimes.inc
+    PAFXCAP(RDNT,XC,TC,TT)$(EFX(TT,TC) AND ifa('FCAP','APETR',RDNT)) = ifa('FCAP','APETR',RDNT)*iva('APETR',RDNT)*PCAP(RDNT,XC,TC,TT);
+    PAFXCAP('NAT',XC,TC,TT)$EFX(TT,TC)  = SUM(RDNT,PAFXCAP(RDNT,XC,TC,TT));
 
       IF(NOT T1(TC),
 
@@ -233,9 +235,6 @@ $offtext
          EFLOW(RDNT,XC,TC,TT) = max(EFLOW(RDNT,XC,TC,TT),0.1);
 *          EFLOW(RDNT,XC,TC,TT) = max(EFLOW(RDNT,XC,TC,TT),1);
 
-*bm+sr+fh
- EFLOW(RDNT,XC,TC,TT) = max(EFLOW(RDNT,XC,TC,TT),0.5);
-
           iva('AELEC','NAT')
                  = SUM(RDNT, iva0('AELEC',RDNT)*EFLOW(RDNT,XC,TC,TT))/EFLOW('nat',XC,TC,TT);
           ifa(F,'AELEC','NAT')
@@ -251,6 +250,11 @@ $offtext
           ifa(F,'APETR','NAT')
                  = SUM(RDNT, ifa0(F,'APETR',RDNT)*iva0('APETR',RDNT)*PFLOW(RDNT,XC,TC,TT)/SUM(RDNTP, iva0('APETR',RDNTP)*PFLOW(RDNTP,XC,TC,TT)));
 
+*bm/sr/fh added this to save model from crashing from demand for ccoal-low disapearing completely.
+          ica('ccoal-low',A,'NAT')$ica0('ccoal-low',A,'NAT') = max(ica('ccoal-low',A,'NAT'),0.0004);
+
+
+
 *          ica(C,'APETR','NAT')
 *                 = SUM(RDNT, ica0(C,'APETR',RDNT)*PFLOW(RDNT,XC,TC,TT)/PFLOW('nat',XC,TC,TT));
 
@@ -263,26 +267,42 @@ $offtext
           AFX('AELEC',RD)$EFX(TT,TC) = YES;
 *CA  slow electricity capital growth when utilization rate is low outside of TIMES periods
           AFX('AELEC',RD)$(NOT EFX(TT,TC) AND QFSUPX('FEGY',XC,TC-1,TT) LT .9) = YES;
-          ANFX(A,RD)=NO;
-          ANFX(A,RD)$(NOT AFX(A,RD)) = YES;
-          AFXGR('AELEC','NAT',XC,TC)$EFX(TT,TC) = EAFXCAP('NAT',XC,TC,TT)/EAFXCAP('NAT',XC,TC-1,TT)- 1;
-          AFXGR('AELEC','NAT',XC,TC)$(NOT EFX(TT,TC) AND QFSUPX('FEGY',XC,TC-1,TT) LT .9) = -natdrate;
+
+          AFX('APETR',RD) = NO;
+          AFX('APETR',RD)$EFX(TT,TC) = YES;
+          AFX('APETR',RD)$(NOT EFX(TT,TC) AND QFSUPX('FCAP',XC,TC-1,TT) LT .9) = YES;
+
+         AFXGR('AELEC','NAT',XC,TC)$EFX(TT,TC) = EAFXCAP('NAT',XC,TC,TT)/EAFXCAP('NAT',XC,TC-1,TT)- 1;
+         AFXGR('AELEC','NAT',XC,TC)$(NOT EFX(TT,TC) AND QFSUPX('FEGY',XC,TC-1,TT) LT .9) = -natdrate;
+
+*bm/fh added petroleum sector
+           AFXGR('APETR','NAT',XC,TC)$EFX(TT,TC) = PAFXCAP('NAT',XC,TC,TT)/PAFXCAP('NAT',XC,TC-1,TT)- 1;
+           AFXGR('APETR','NAT',XC,TC)$(NOT EFX(TT,TC) AND QFSUPX('FCAP',XC,TC-1,TT) LT .9) = -natdrate;
+
+
+
 *CA fix imports in accordance with TIMES for all periods
-
-
-* taken out imports in Nov 2016 as it's causing trouble - looks like it should only be forced for EFX years
           QM.FX('CELEC','REST') = EFLOW('IMP',XC,TC,TT);
 
 
-*CATep fix capital in cpetr
- AFX('APETR',RD)=YES;
+*CA
  ANFX(A,RD)=NO;
  ANFX(A,RD)$(NOT AFX(A,RD))=YES;
 
+$ONTEXT
+*fh Ceiling on coal exports due to rail limitations
+ IF (NOT T1(TC) AND QE.L('CCOAL-HGH','REST') GT 97.5,
+      QE.FX('CCOAL-HGH','REST') = 97.5;
+      PWE.LO('CCOAL-HGH','REST')=-INF;
+      PWE.UP('CCOAL-HGH','REST')=+INF;
+* ELSE QE.FX('CCOAL-HGH','REST') = QE.L('CCOAL-HGH','REST');
+*      PWE.LO('CCOAL-HGH','REST')= PWE('CCOAL-HGH','REST');
+*      PWE.UP('CCOAL-HGH','REST')= PWE('CCOAL-HGH','REST');
+     );
+$OFFTEXT
 *fh
 
  AFX('AGOLD',RD)=YES;
- ANFX(A,RD)=NO;
  ANFX(A,RD)$(NOT AFX(A,RD))=YES;
  AFXGR('AGOLD','NAT',XC,TC) = -0.001;
 * AFXGR('AGOLD','NAT',XC,TC) = 0.08;

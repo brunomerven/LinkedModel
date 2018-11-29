@@ -20,6 +20,7 @@
   RUNTIMES2.ap = 0;
   put 'copy "%workingfolder%SATM\%TIMESfolder%\DMDTECHAFRES+REGION1.bu" "%workingfolder%SATM\%TIMESfolder%\DMDTECHAFRES+REGION1.dds"'/;
   put 'copy "%workingfolder%SATM\%TIMESfolder%\DMDTECHAFCOM+REGION1.bu" "%workingfolder%SATM\%TIMESfolder%\DMDTECHAFCOM+REGION1.dds"'/;
+  put 'copy "%workingfolder%SATM\%TIMESfolder%\COALSUPMODEL+REGION1.bu" "%workingfolder%SATM\%TIMESfolder%\COALSUPMODEL+REGION1.dds"'/;
 
   loop(MRUNCASE(RUN,TIMESCASE), put ".\satm\%TIMESfolder%\RUNTIMES.CMD ", "%workingfolder%":38,TIMESCASE.TL:20,"%TIMESfolder%");
 
@@ -27,7 +28,7 @@
 
 * Run TIMES model
  execute ".\satm\%TIMESfolder%\ShowRunNumber.CMD"
- execute ".\satm\%TIMESfolder%\RUNTIMES2.CMD"
+* execute ".\satm\%TIMESfolder%\RUNTIMES2.CMD"
  execute "echo --- Return to CGE model"
 
 
@@ -164,9 +165,15 @@ IF(TT1(TT),
 
 
  ECAP('NAT',XC,TC,TT) = SUM(RDNT, ECAP(RDNT,XC,TC,TT));
+*bm+fh 201118: including investment and capital for refineries
+ PCAP('NAT',XC,TC,TT) = SUM(RDNT, PCAP(RDNT,XC,TC,TT));
+
 
 *Electricity and petroleum build plan projection
  ECAPGR('nat',XC,TC,TT)$ECAP('nat',XC,TC-1,TT) = ECAP('nat',XC,TC,TT)/ECAP('nat',XC,TC-1,TT)-1;
+*bm+fh 201118: including investment and capital for refineries
+ PCAPGR('nat',XC,TC,TT)$PCAP('nat',XC,TC-1,TT) = PCAP('nat',XC,TC,TT)/PCAP('nat',XC,TC-1,TT)-1;
+
 
 *Investment costs from TIMES ----------------------------------
 
