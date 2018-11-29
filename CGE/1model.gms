@@ -114,6 +114,8 @@ $INCLUDE %countrydata%
  SAMBALCHK(AC)   = SAM('TOTAL',AC) - SAM(AC,'TOTAL');
  SAMBALCHK(AC)$(abs( SAMBALCHK(AC)) lt 1e-6) = 0;
 
+*bm/sr/fh calling 1sambal to cleanout small errors
+*$INCLUDE includes\1sambal.inc
 *Additional set definitions based on country SAM======================
 
  CD(C)  = YES$(SUM(ARD, SAM(ARD,C)) GT (SAM(C,'ROW') - TAXPAR('EXPTAX',C) - SUM(CTE, SAM(CTE,C))) );
@@ -407,8 +409,12 @@ PARAMETERS
  ITAXSHR0                share of indirect taxes in GDPMP
  TAXADJ0                 tax adjustment which maintains indirect tax share
  GDPMP0                  nominal GDP at market prices
+*FH
+ PWEADJ(C,RW)
 ;
 
+*FH
+ PWEADJ(C,RW)=0;
 *CA set within category capital mobility
 beta2(fcap)=2;
 *beta2('fegy')=0.2;
@@ -1952,7 +1958,7 @@ QFS.FX('FCAP')=QFS0('FCAP');
 *9. SOLUTION STATEMENT
 *--------------------------------------------------------------------------------------------
 
-OPTIONS ITERLIM = 1000, LIMROW = 3000, LIMCOL = 0, SOLPRINT=ON, MCP=PATH, NLP=CONOPT3;
+OPTIONS ITERLIM = 1000, LIMROW = 3000, LIMCOL = 0, SOLPRINT=ON, MCP=PATH, NLP=CONOPT;
  STANDCGE.HOLDFIXED   = 1 ;
  STANDCGE.TOLINFREP   = .0001 ;
 

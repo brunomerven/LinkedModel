@@ -77,7 +77,9 @@ PARAMETER
 
 *SAMBALCHK ----------------------------------------------------
  SAMGAPCUTOFF = 1.0e-5;
- ERRSAMBAL(AC)$(ABS(SAMBALCHK(AC)) GT SAMGAPCUTOFF) = 1/0;
+* ERRSAMBAL(AC)$(ABS(SAMBALCHK(AC)) GT SAMGAPCUTOFF) = 1/0;
+ ERRSAMBAL(AC)$(ABS(SAMBALCHK(AC)) GT SAMGAPCUTOFF) = SAMBALCHK(AC);
+ display$sum(ac,ERRSAMBAL(AC)) '*#* error in diagnostics', ERRSAMBAL;
 
 *NEGCELL ------------------------------------------------------
 

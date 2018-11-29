@@ -27,6 +27,7 @@
  Calc('FacRet_SectDiff','level',f,ar,RUN,XC,TC) = sum((a,rd,TTRN)$actagg(a,rd,ar),wfdistx(f,a,'nat',XC,TC,TTRN));
 
 *Trade
+ Calc('Exports','Level',c,'all',RUN,XC,TC) = sum(ttrn,qex(c,'rest',XC,TC,TTRN));
  Calc('Exports','Value','all',ar,RUN,XC,TC) = sum((a,rd,TTRN)$actagg(a,rd,ar),sum(c$mac(a,c),exr0*qex(c,'rest',XC,TC,TTRN)*pwe0(c,'rest')));
  Calc('Imports','Value','all',ar,RUN,XC,TC) = sum((a,rd,TTRN)$actagg(a,rd,ar),sum(c$mac(a,c),exr0*qmx(c,'rest',XC,TC,TTRN)*pwm0(c,'rest')));
 
