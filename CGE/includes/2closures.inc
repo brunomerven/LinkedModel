@@ -165,6 +165,8 @@
   IF(ROWCLOS(XC) EQ 1,
    FBOR.FX   = FBOR.L;
    FSAV.FX   = FSAV.L * (1+FSAVGR(XC,TC));
+*fh
+*   FSAV.FX   = (FSAV.L * (1+FSAVGR(XC,TC)))+FSHOCK('FULL',TC);
    EXR.LO    = -INF;
    EXR.UP    = +INF;
    );

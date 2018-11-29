@@ -207,6 +207,9 @@ $offtext
 *
   ica(C,A,'NAT')$ICAGR(C,A,TC) = ica(C,A,'NAT')*ICAGR(C,A,TC);
 
+*sr/bm/fh .L experiment
+  QF.L(F,'ahydr',RD)$(ICAGR('chydr','atrps',TC)) = QF.L(F,'ahydr',RD)*ICAGR('chydr','atrps',TC);
+  QA.L('ahydr')$(ICAGR('chydr','atrps',TC)) = QA.L('ahydr')*ICAGR('chydr','atrps',TC);
 
 * for Households
   gammam(C,H)$gammamgr(C,H,TC,TT) = gammam(C,H)*gammamgr(C,H,TC,TT);
@@ -229,6 +232,9 @@ $offtext
 *fh
          EFLOW(RDNT,XC,TC,TT) = max(EFLOW(RDNT,XC,TC,TT),0.1);
 *          EFLOW(RDNT,XC,TC,TT) = max(EFLOW(RDNT,XC,TC,TT),1);
+
+*bm+sr+fh
+ EFLOW(RDNT,XC,TC,TT) = max(EFLOW(RDNT,XC,TC,TT),0.5);
 
           iva('AELEC','NAT')
                  = SUM(RDNT, iva0('AELEC',RDNT)*EFLOW(RDNT,XC,TC,TT))/EFLOW('nat',XC,TC,TT);
@@ -273,17 +279,6 @@ $offtext
  ANFX(A,RD)=NO;
  ANFX(A,RD)$(NOT AFX(A,RD))=YES;
 
-$ONTEXT
-*fh Ceiling on coal exports due to rail limitations
- IF (NOT T1(TC) AND QE.L('CCOAL-HGH','REST') GT 97.5,
-      QE.FX('CCOAL-HGH','REST') = 97.5;
-      PWE.LO('CCOAL-HGH','REST')=-INF;
-      PWE.UP('CCOAL-HGH','REST')=+INF;
-* ELSE QE.FX('CCOAL-HGH','REST') = QE.L('CCOAL-HGH','REST');
-*      PWE.LO('CCOAL-HGH','REST')= PWE('CCOAL-HGH','REST');
-*      PWE.UP('CCOAL-HGH','REST')= PWE('CCOAL-HGH','REST');
-     );
-$OFFTEXT
 *fh
 
  AFX('AGOLD',RD)=YES;

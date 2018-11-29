@@ -99,6 +99,8 @@ PARAMETERS
 *FH: IASS Shock
  PWE_COAL(C,RW,X,T)     baseline sensitivity for global coal demand
  rhova_coal(A,RD,X,T)       increase capital intensity of coal mining
+*fh
+ Fshock(*,T);
 ;
 
  CTA_EMRR(CTA)=0;
@@ -106,7 +108,7 @@ PARAMETERS
 $call    "gdxxrw i=cge\%basedata% o=basedata index=index!a6 checkdate"
 $gdxin   basedata.gdx
 $load    X T TDIR TIMESDIR
-$loaddc  XC TC TT TTN FL AFX CLOSURES CLEANTECH EINVEST ECAPACITY PWGR CARBONTAX RETALTAX
+$loaddc  XC TC TT TTN FL AFX CLOSURES CLEANTECH EINVEST ECAPACITY PWGR CARBONTAX RETALTAX FSHOCK
 
 alias (TC,TCP), (TT, TTP);
 
@@ -139,6 +141,7 @@ alias (TC,TCP), (TT, TTP);
 *Fixed capital growth sectors
  ANFX(A,RD)$(NOT AFX(A,RD)) = YES;
 
+$ontext
  Set
  TD(TC)  /2021*2050/
 
@@ -147,7 +150,7 @@ alias (TC,TCP), (TT, TTP);
 
  TDUM(TC)=1;
  TDUM(TD)=0;
-
+$offtext
 *------------------------------------------------------------------------------
 *1. Excel inputted scenario calibration
 *------------------------------------------------------------------------------
@@ -243,9 +246,7 @@ PARAMETER
  irate = 0.05;
 
  rhova_coal(A,RD,X,T)=rhova(A,RD);
- rhova_coal('acoal',RD,'capinten',T)=rhova('acoal',RD)*0.5;
-
-
+* rhova_coal('acoal',RD,'capinten',T)=rhova('acoal',RD)*0.5;
 
 *----------------------------------------------------------------------
 *3. Closures

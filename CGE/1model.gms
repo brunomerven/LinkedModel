@@ -407,12 +407,8 @@ PARAMETERS
  ITAXSHR0                share of indirect taxes in GDPMP
  TAXADJ0                 tax adjustment which maintains indirect tax share
  GDPMP0                  nominal GDP at market prices
-*FH
- PWEADJ(C,RW)
 ;
 
-*FH
- PWEADJ(C,RW)=0;
 *CA set within category capital mobility
 beta2(fcap)=2;
 *beta2('fegy')=0.2;

@@ -8,17 +8,22 @@
 $SETGLOBAL workingfolder C:\SATIMGE_02\
 $SETGLOBAL Rworkingfolder C:/SATIMGE_02/
 * TIMES GDX output folder
-*$SETGLOBAL TIMESfolder Gams_WrkTI-PAMS
-$SETGLOBAL TIMESfolder Gams_WrkTI-IFPRI
+$SETGLOBAL TIMESfolder Gams_WrkTI-PAMS
+*$SETGLOBAL TIMESfolder Gams_WrkTI-IFPRI
 $SETGLOBAL gdxfolder %workingfolder%SATM\%TIMESfolder%\Gamssave\
 * Subset of TIMES GDX output folder
 $SETGLOBAL GDXoutfolder %workingfolder%GDXout\
 $SETGLOBAL GDXoutfolder2 %workingfolder%GDXCGEout\
-*$SETGLOBAL referencerun REFU-BU2
-$SETGLOBAL referencerun CIPP_REF0_5Y
+
+*Annual runs:
+$SETGLOBAL referencerun REF-BU-CS-A
+*the older one: REFU-BU2_CS_A
+*5year run:
+*$SETGLOBAL referencerun REFU-BU2_CS_5Y
+
 *$SETGLOBAL referencerun PAMS_BFUEL
 $SETGLOBAL outputworkbook outputworkbook_v08.xlsx
-$SETGLOBAL MCSIMworkbook MCSimTra3.xlsm
+
 *-------------------------------------------------------------------------------
 
 *2.Defining sets and parameters used in Batch file------------------------------
@@ -126,8 +131,12 @@ Sets
   RTP(REG,AY,PRC)                Technology valid years
   UNCD7(*,*,*,*,*,*,*)           Non-domain-controlled set of 7-tuples
 ;
-
+VARIABLES
+         VAR_CAP(REG,AY,PRC)     Variable of total capacity including residual
+         VAR_RCAP(REG,AY,AY,PRC) Variable of early retirement of processes
+;
 PARAMETERS
+
 *Overall Parameters
   XRATE(RUN,AY)                  Real Exchange Rate R per $
 
@@ -141,6 +150,8 @@ PARAMETERS
   PRC_CAPACT(REG,PRC)            Factor going from capacity to activity
   PRC_RESID(REG,AY,PRC)          Existing Capacity
   PAR_CAPL(REG,AY,PRC)           Capacity excluding existing capacity
+  PAR_VCAPL(REG,AY,PRC)          Variable VAR_CAPL results as parameter
+  PAR_RCAPL(REG,AY,PRC)          Early retirement of capacity results
   PAR_NCAPL(REG,AY,PRC)          New Capacity
   PAR_COMBALEM(REG,AY,COM,S)     Commodity marginal
   PAR_NCAPR(REG,AY,P,ITEM)       Levelised Cost
@@ -355,7 +366,7 @@ $load PRC P COM DEM ALLYEAR S V ITEM OB_ICOST
 $load DATAYEAR DM_YEAR MILESTONYR RTP B E
 $load MY_FYEAR MY_FIL2
 
-*uncomment below to update spreadsheet, if PRCs and COMs have changed in the TIMES model
+*uncomment below to update spreadsheet 0FORECAST.XLS IN LINKS FOLDER, if PRCs and COMs have changed in the TIMES model
 *execute_unload "SATMR.gdx" PRC COM
 *execute 'gdxxrw.exe i=SATMR.gdx o=.\links\0forecast.xlsx index=index_G2E!a6';
 *$exit
@@ -373,7 +384,7 @@ Alias (MILESTONYR,MY), (P,PP); ;
 *-------------------------------------------------------------------------------
 
 *5 Import MC parameters and data from spreadsheet-------------------------------
-$call   "gdxxrw i=%MCSIMworkbook% o=mcsim index=index!a6 checkdate"
+$call   "gdxxrw i=MCSim.xlsm o=mcsim index=index!a6 checkdate"
 $gdxin  mcsim.gdx
 $loaddc RUN FUELP FUELPO FUELPC FUELPCPWR FUELPCPWR_CB FUELPCPWR_A FUELPG TECHS TECHN TECHC TECHP ETC ETCA ETG ETGIH ETN ERH ERSOLP ERSOLPC ERSOLPR ERSOLT ERW ERB CO2SET FS FuelPrices UXLE_AB TIMESCASE INCLRUN
 $load MRUNCASE PamsSector GDP_FS_L SIM_POP SIM_GDP_Y SIM_COM_S SIM_GCOAL SIM_GGAS SIM_GOIL OCRFAC COAL_CV SIM_CLE1 SIM_CLE2 SIM_CLN SIM_CLE_A SIM_CLN_A SIM_CLNU_A SIM_GIH PV_CRATIO SIM_PV_MODULE SIM_PV_BOS CSP_CRATIO
@@ -388,7 +399,6 @@ $load SIM_CSP SIM_NUCLEAR SIM_NUCLEARCF SIM_NUCLEARLT SIM_HYDIMP SIM_SOLTPKNT SI
 *7 CGE: Parameter and set declaration-------------------------------------------
 $batinclude cge\includes\2simulation.inc 1
 $batinclude cge\includes\3report_init.inc
-*fh
 $batinclude cge\includes\SATIMViz_init.inc
 *-------------------------------------------------------------------------------
 
@@ -595,10 +605,8 @@ ELSE
   POPSX(MY) = SIM_POP(RUN,MY);
   TRAMOD = SIM_TRAMOD(RUN);
 
-*  execute_unload "MCDem.gdx" POPSX GDP_FSX TRAMOD;
-*  execute 'gdxxrw.exe i=MCDem.gdx o=.\SATM\DMD_PRJ.xlsx index=index_G2E!a6';
-    execute_unload "MCDem.gdx" PAMS
-    execute 'gdxxrw.exe i=MCDem.gdx o=SATM\DMD_PRJ.xlsx index=index_G2E!a6';
+  execute_unload "MCDem.gdx" POPSX GDP_FSX TRAMOD;
+  execute 'gdxxrw.exe i=MCDem.gdx o=.\SATM\DMD_PRJ.xlsx index=index_G2E!a6';
 
   execute 'gdxxrw.exe i=.\SATM\DMD_PRJ.xlsx o=mcdem2.gdx index=index_E2G!a6 checkdate';
   execute_load "mcdem2.gdx" SIM_DEMX Passengerkm Tonkm;
@@ -684,6 +692,33 @@ LOOP(RUN$INCLRUN(RUN),
   execute "%workingfolder%RProcessGDX.CMD"
 );
 *-------------------------------------------------------------------------------
+
+*$ontext
+*13 CGE Results dump - compact results----------------------------------------------
+$ontext
+PARAMETER XLTEST;
+execute_unload "Results_CGE.gdx" Calc
+execute 'xlstalk.exe -m Results_CGE.xlsx';
+ XLTEST = ERRORLEVEL;
+IF(XLTEST = 1,
+execute 'xlstalk.exe -c Results_CGE.xlsx';
+);
+IF(XLTEST = 2,
+execute 'xlstalk.exe -s Results_CGE.xlsx';
+);
+execute 'gdxxrw.exe i=Results_CGE.gdx o=Results_CGE.xlsx index=index!a7';
+execute 'xlstalk.exe -o Results_CGE.xlsx';
+DISPLAY XLTEST;
+$offtext
+*-------------------------------------------------------------------------------
+* put_utilities CGE_Scen 'gdxcgeout' / "C:\SATIMGE_02\GDXCGEout\";
+*C:\SATIMGE_02\GDXCGEout\
+*,RUN.TL:20
+$ontext
+$gdxout %workingfolder%GDXCGEout\Run
+$unload calc
+$gdxout
+$offtext
 
 *END OF BATCHRUN FILE
 *$offtext
