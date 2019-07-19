@@ -73,6 +73,9 @@ PARAMETER
  WFDISTX(F,A,RD,X,T,TT)           factor wage distortion variable
  YFX(F,X,T,TT)                    factor income
  YGX(X,T,TT)                      total current government income
+ YG_DTAXX(X,T,TT)               direct current government income
+ YG_ITAXX(X,T,TT)               indirect current government income
+ YG_NTAXX(X,T,TT)               other current government income - should be 0
  YIFX(INS,F,X,T,TT)               income of institution ins from factor f
  YIX(INS,X,T,TT)                  income of (domestic non-governmental) institution ins
  WALRASX(X,T,TT)                  walras law value

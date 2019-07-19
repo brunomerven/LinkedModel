@@ -28,7 +28,7 @@
 
 * Run TIMES model
  execute ".\satm\%TIMESfolder%\ShowRunNumber.CMD"
- execute ".\satm\%TIMESfolder%\RUNTIMES2.CMD"
+* execute ".\satm\%TIMESfolder%\RUNTIMES2.CMD"
  execute "echo --- Return to CGE model"
 
 *execute 'sleep 2';

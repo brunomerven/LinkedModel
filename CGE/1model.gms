@@ -144,7 +144,7 @@ $INCLUDE %countrydata%
 
  AELASTAB(C,'OUTAGG')$(NOT SUM(ARD, SAM(ARD,C)))     = 0;
 
- YELASTAB(C,H)$(NOT SAM(C,H))         = 0;
+ YELASTAB(C,H)$(NOT SAM(C,H)) = 0;
  HELAS(A,H)$(NOT SUM((ARD,RD)$MARD(ARD,A,RD), SAM(ARD,H)))  = 0;
 
 *Diagnostics --------------------------------------------------
@@ -406,6 +406,8 @@ PARAMETERS
  PRODSHR(A,RD)
  YG_DTAX0                direct tax take plus transfers from abroad
  YG_ITAX0                indirect tax take
+*FH 25062019
+ YG_NTAX0                price differentials (utax code)
  ITAXSHR0                share of indirect taxes in GDPMP
  TAXADJ0                 tax adjustment which maintains indirect tax share
  GDPMP0                  nominal GDP at market prices
@@ -435,8 +437,10 @@ ELSE
  PAR0(A,RD)$QPROD(A,RD)    = SUM(ARD$MARD(ARD,A,RD), SAM('TOTAL',ARD)) / QPROD(A,RD);
 * PRODSHR(A,RD)$QPROD(A,RD) = QPROD(A,RD) / QPROD(A,'NAT');
 * PA0(A)$SUM(RD, PRODSHR(A,RD)*PAR0(A,RD)) = SUM(RD, PRODSHR(A,RD)*PAR0(A,RD));
- PA0(A) = SUM(RD,PAR0(A,RD));
- PSUP(C)              = SUM(A$MAC(A,C), PA0(A));
+ PA0(A)               = SUM(RD,PAR0(A,RD));
+*fh 26062019 replace calculation of psup with a weighted average
+* PSUP(C)              = SUM(A$MAC(A,C), PA0(A));
+ PSUP(C)$sum(AP,SAM(AP,C)) = SUM(A$MAC(A,C),(PA0(A)*SAM(A,C)/sum(AP,SAM(AP,C))));
  PE0(C,RW)$CERW(C,RW) = PSUP(C);
  PX0(C)$CX(C)         = PSUP(C);
  PDS0(C)$CD(C)        = PSUP(C);
@@ -447,7 +451,7 @@ ELSE
 *Activity quantity = payment to activity divided by activity price
 *QA covers both on-farm consumption and marketed output output GROSS of tax
  QAR0(A,RD)$PAR0(A,RD) =  SUM(ARD$MARD(ARD,A,RD), SAM('TOTAL',ARD))/PAR0(A,RD) ;
- QA0(A)            =  SUM(RD, QAR0(A,RD));
+ QA0(A)                =  SUM(RD, QAR0(A,RD));
 
 *SR If an activity is produced in only one region, set ACES2 to "no"
  ACES2(A)$(SUM(RD$QAR0(A,RD), 1) eq 1) = no ;
@@ -463,47 +467,38 @@ ELSE
  QXAC0(A,C)$PXAC0(A,C) =  SUM((ARD,RD)$(MARD(ARD,A,RD) AND QVA0(A,RD)), SAM(ARD,C)) / PXAC0(A,C);
 
 *Energy: Special treatment for coal disaggregation
-*FH: No discard coal in the model
-* QXAC0('ACOAL','CCOAL-DIS') = CALIB('CCOAL-DIS','QA')/1000;
- QXAC0('ACOAL','CCOAL-LOW') = CALIB('CCOAL-LOW','QA');
-* QXAC0('ACOAL','CCOAL-HGH') = QA0('ACOAL') - QXAC0('ACOAL','CCOAL-DIS') - QXAC0('ACOAL','CCOAL-LOW');
- QXAC0('ACOAL','CCOAL-HGH') = QA0('ACOAL') - QXAC0('ACOAL','CCOAL-LOW');
- PXAC0('ACOAL',C)$QXAC0('ACOAL',C) = SAM('ACOAL',C)/QXAC0('ACOAL',C);
-* PXAC0('ACOAL',C)$QXAC0('ACOAL','CCOAL') = SAM('ACOAL','CCOAL')/QXAC0('ACOAL',C);
-* PX0('CCOAL-DIS') = PXAC0('ACOAL','CCOAL-DIS');
- PX0('CCOAL-LOW') = PXAC0('ACOAL','CCOAL-LOW');
- PX0('CCOAL-HGH') = PXAC0('ACOAL','CCOAL-HGH');
-* PDS0('CCOAL-DIS') = PXAC0('ACOAL','CCOAL-DIS');
- PDS0('CCOAL-LOW') = PXAC0('ACOAL','CCOAL-LOW');
- PDS0('CCOAL-HGH') = PXAC0('ACOAL','CCOAL-HGH');
-* PE0('CCOAL-DIS','REST') = PXAC0('ACOAL','CCOAL-DIS');
- PE0('CCOAL-LOW','REST') = PXAC0('ACOAL','CCOAL-LOW');
- PE0('CCOAL-HGH','REST') = PXAC0('ACOAL','CCOAL-HGH');
+ QXAC0('ACOAL','CCOAL-LOW')        = CALIB('CCOAL-LOW','QA');
+ QXAC0('ACOAL','CCOAL-HGH')        = CALIB('CCOAL-HGH','QA');
+ PXAC0('ACOAL','CCOAL-LOW')        = SAM('ACOAL','CCOAL-LOW')/QXAC0('ACOAL','CCOAL-LOW');
+ PXAC0('ACOAL','CCOAL-HGH')        = SAM('ACOAL','CCOAL-HGH')/QXAC0('ACOAL','CCOAL-HGH');
+ PX0('CCOAL-LOW')                  = PXAC0('ACOAL','CCOAL-LOW');
+ PX0('CCOAL-HGH')                  = PXAC0('ACOAL','CCOAL-HGH');
+ PDS0('CCOAL-LOW')                 = PXAC0('ACOAL','CCOAL-LOW');
+ PDS0('CCOAL-HGH')                 = PXAC0('ACOAL','CCOAL-HGH');
+ PE0('CCOAL-LOW','REST')           = PXAC0('ACOAL','CCOAL-LOW');
+*fh 25062019
+ PE0('CCOAL-HGH','REST')           = PXAC0('ACOAL','CCOAL-HGH');
+* QE0('CCOAL-HGH','REST')           = CALIB('CCOAL-HGH','QE');
+* PE0('CCOAL-HGH','REST')           = (SAM('CCOAL-HGH','ROW'))/QE0('CCOAL-HGH','REST');
 
-*$ontext
 *FH: Petroleum
  QXAC0('APETR','CPETR_D') = CALIB('CPETR_D','QA');
  QXAC0('APETR','CPETR_O') = CALIB('CPETR_O','QA');
  QXAC0('APETR','CPETR_P') = CALIB('CPETR_P','QA');
-* PXAC0('APETR',C)$QXAC0('APETR',C)= (SAM('APETR-OIL',C)+SAM('APETR-CTL',C)+SAM('APETR-GTL',C)+SAM('APETR-BIO',C))/QXAC0('APETR',C);
- PXAC0('APETR','CPETR_P')= SAM('APETR','CPETR_P')/QXAC0('APETR','CPETR_P');
- PXAC0('APETR','CPETR_D')= SAM('APETR','CPETR_D')/QXAC0('APETR','CPETR_D');
- PXAC0('APETR','CPETR_O')= SAM('APETR','CPETR_O')/QXAC0('APETR','CPETR_O');
+ PXAC0('APETR','CPETR_P') = SAM('APETR','CPETR_P')/QXAC0('APETR','CPETR_P');
+ PXAC0('APETR','CPETR_D') = SAM('APETR','CPETR_D')/QXAC0('APETR','CPETR_D');
+ PXAC0('APETR','CPETR_O') = SAM('APETR','CPETR_O')/QXAC0('APETR','CPETR_O');
+ PX0('CPETR_P')           = PXAC0('APETR','CPETR_P');
+ PX0('CPETR_O')           = PXAC0('APETR','CPETR_O');
+ PX0('CPETR_D')           = PXAC0('APETR','CPETR_D');
+ PDS0('CPETR_P')          = PXAC0('APETR','CPETR_P');
+ PDS0('CPETR_O')          = PXAC0('APETR','CPETR_O');
+ PDS0('CPETR_D')          = PXAC0('APETR','CPETR_D');
+*fh 25062019
+ PE0('CPETR_P','REST')    = PXAC0('APETR','CPETR_P');
+ PE0('CPETR_D','REST')    = PXAC0('APETR','CPETR_D');
+ PE0('CPETR_O','REST')    = PXAC0('APETR','CPETR_O');
 
- PX0('CPETR_P')  = PXAC0('APETR','CPETR_P');
- PX0('CPETR_O')  = PXAC0('APETR','CPETR_O');
- PX0('CPETR_D')  = PXAC0('APETR','CPETR_D');
-
- PDS0('CPETR_P') = PXAC0('APETR','CPETR_P');
- PDS0('CPETR_O') = PXAC0('APETR','CPETR_O');
- PDS0('CPETR_D') = PXAC0('APETR','CPETR_D');
-
- PE0('CPETR_P','REST') = PXAC0('APETR','CPETR_P');
- PE0('CPETR_D','REST') = PXAC0('APETR','CPETR_D');
- PE0('CPETR_O','REST') = PXAC0('APETR','CPETR_O');
-
-*$offtext
-*QHA0(A,H)$SHRHOME(A,H) = SHRHOME(A,H)*SAM(A,H)/PXAC0(A,C);
  QHA0(A,H)         = SUM((ARD,RD)$MARD(ARD,A,RD),SAM(ARD,H))/PA0(A);
  QANET0(A)         = QA0(A) - SUM(H, QHA0(A,H));
 
@@ -519,27 +514,14 @@ PARAMETER TRESHR(C,RW);
 * QE0(C)$SAM(C,'ROW') = (SAM(C,'ROW') - TAXPAR('EXPTAX',C) - SUM(CTE, SAM(CTE,C)))/PE0(C);
  QE0(C,RW)$(CERW(C,RW) AND PE0(C,RW)) = (SAM(C,'ROW')*REGEXP(C,RW) - TAXPAR('EXPTAX',C)*REGETX(C,RW) - SUM(CTE, SAM(CTE,C))*TRESHR(C,RW) )/PE0(C,RW);
 
-*$ONTEXT
-*fh-----------------------------------------------------------------------------
-* QE0('CPETR_P','REST') = CALIB('CPETR_P','QE');
-* QE0('CPETR_O','REST') = CALIB('CPETR_O','QE');
-* QE0('CPETR_D','REST') = CALIB('CPETR_D','QE');
-
-* PE0('CPETR_P','REST') = (SAM('CPETR_P','ROW')*REGEXP('CPETR_P','REST') - TAXPAR('EXPTAX','CPETR_P')*REGETX('CPETR_P','REST') - SUM(CTE, SAM(CTE,'CPETR_P'))*TRESHR('CPETR_P','REST'))/QE0('CPETR_P','REST');
-* PE0('CPETR_O','REST') = (SAM('CPETR_O','ROW')*REGEXP('CPETR_O','REST') - TAXPAR('EXPTAX','CPETR_O')*REGETX('CPETR_O','REST') - SUM(CTE, SAM(CTE,'CPETR_O'))*TRESHR('CPETR_O','REST'))/QE0('CPETR_O','REST');
-* PE0('CPETR_D','REST') = (SAM('CPETR_D','ROW')*REGEXP('CPETR_D','REST') - TAXPAR('EXPTAX','CPETR_D')*REGETX('CPETR_D','REST') - SUM(CTE, SAM(CTE,'CPETR_D'))*TRESHR('CPETR_D','REST'))/QE0('CPETR_D','REST');
-*fh-----------------------------------------------------------------------------
-*$OFFTEXT
+* QE0('CCOAL-HGH','REST')           = CALIB('CCOAL-HGH','QE');
+* PE0('CCOAL-HGH','REST')           = SAM('CCOAL-HGH','ROW')/QE0('CCOAL-HGH','REST');
 
 *RoW export price = RoW export payment (in for curr) / export qnty
  PWE0(C,RW)$(CERW(C,RW) AND QE0(C,RW))  = (SAM(C,'ROW')*REGEXP(C,RW)/EXR0) / QE0(C,RW);
  pwebar(C,RW) = PWE0(C,RW);
  te0(C,RW)$(SAM(C,'ROW')*REGEXP(C,RW)) = (TAXPAR('EXPTAX',C)*REGETX(C,RW))/(SAM(C,'ROW')*REGEXP(C,RW));
  te(C,RW)               =  te0(C,RW);
-
- PE0('CPETR_P','REST') = (SAM('CPETR_P','ROW')*REGEXP('CPETR_P','REST') - TAXPAR('EXPTAX','CPETR_P')*REGETX('CPETR_P','REST') - SUM(CTE, SAM(CTE,'CPETR_P'))*TRESHR('CPETR_P','REST'))/QE0('CPETR_P','REST');
- PE0('CPETR_O','REST') = (SAM('CPETR_O','ROW')*REGEXP('CPETR_O','REST') - TAXPAR('EXPTAX','CPETR_O')*REGETX('CPETR_O','REST') - SUM(CTE, SAM(CTE,'CPETR_O'))*TRESHR('CPETR_O','REST'))/QE0('CPETR_O','REST');
- PE0('CPETR_D','REST') = (SAM('CPETR_D','ROW')*REGEXP('CPETR_D','REST') - TAXPAR('EXPTAX','CPETR_D')*REGETX('CPETR_D','REST') - SUM(CTE, SAM(CTE,'CPETR_D'))*TRESHR('CPETR_D','REST'))/QE0('CPETR_D','REST');
 
 *Quantity of output sold domestically = output quantity less quantity
 *exported = value of domestic sales divided by domestic supply price
@@ -569,18 +551,14 @@ PARAMETER TRMSHR(C,RW);
  QM0('CELEC','REST') = CALIB('AELEC','QM');
  PM0('CELEC','REST') = (SAM('ROW','CELEC')+SAM('MTAX','CELEC')+SAM('TRM','CELEC')) / QM0('CELEC','REST');
 
-*$ONTEXT
 *fh-----------------------------------------------------------------------------
  QM0('CPETR_P','REST') = CALIB('CPETR_P','QM');
  QM0('CPETR_O','REST') = CALIB('CPETR_O','QM');
  QM0('CPETR_D','REST') = CALIB('CPETR_D','QM');
 
-* PM0('CPETR_P','REST') = (SAM('ROW','CPETR_P') + TAXPAR('IMPTAX','CPETR_P')*REGTAR('CPETR_P','REST') + SUM(CTM, SAM(CTM,'CPETR_P'))*TRMSHR('CPETR_P','REST'))/QM0('CPETR_P','REST');
-* PM0('CPETR_O','REST') = (SAM('ROW','CPETR_O') + TAXPAR('IMPTAX','CPETR_O')*REGTAR('CPETR_O','REST') + SUM(CTM, SAM(CTM,'CPETR_O'))*TRMSHR('CPETR_O','REST'))/QM0('CPETR_O','REST');
-* PM0('CPETR_D','REST') = (SAM('ROW','CPETR_D') + TAXPAR('IMPTAX','CPETR_D')*REGTAR('CPETR_D','REST') + SUM(CTM, SAM(CTM,'CPETR_D'))*TRMSHR('CPETR_D','REST'))/QM0('CPETR_D','REST');
-
-*fh-----------------------------------------------------------------------------
-*$OFFTEXT
+*fh27062019
+* QM0('CCOAL-HGH','REST') = CALIB('CCOAL-HGH','QM');
+* PM0('CCOAL-HGH','REST') = (SAM('ROW','CCOAL-HGH')+SAM('MTAX','CCOAL-HGH')+SAM('TRM','CCOAL-HGH')) / QM0('CCOAL-HGH','REST');
 
 *World price = import value (in foreign currency / import quantity
  PWM0(C,RW)$CMRW(C,RW) = (SAM('ROW',C)*REGIMP(C,RW)/EXR0) / QM0(C,RW);
@@ -635,9 +613,6 @@ PARAMETER TRMSHR(C,RW);
  TAADJ0 = 0;
  TAPS0  = 0;
  ta01(A,RD) = 1;
-*fh
-* ta01(A,RD) = 0;
-* ta01('AELEC',RD) = 1;
  tabar(A,RD) = TA0(A,RD);
 
 *Yield coefficient = quantity produced and delivered to market.
@@ -654,17 +629,22 @@ PARAMETER TRMSHR(C,RW);
 PARAMETER
  tui0(C,A,RD)
  tuh0(C,H)
+*fh11062019
+ tue0(C,RW)
  tui(C,A,RD)
  tuh(C,H)
+*fh11062019
+ tue(C,RW)
  PQI0(C,A,RD)
  PQH0(C,H)
+*fh11062019
+ PQE0(C,RW)
 ;
 
 SCALAR
- alphawfdist range for value of capital parameter /0.0/
-*/.2/
+ alphawfdist range for value of capital parameter /0/;
+*bm /.2/
 ;
-
 
 *utax code
 *CA specify base level of intermediate input use
@@ -679,11 +659,25 @@ SCALAR
  PQI0('CELEC',A,RD)$(QINTA0(A,RD)*ica('CELEC',A,RD))
 *         = SUM(ARD$MARD(ARD,A,RD), SAM('CELEC',ARD) + SAM('UTAX',ARD)) / (QINTA0(A,RD)*ica('CELEC',A,RD));
          = SUM(ARD$MARD(ARD,A,RD), SAM('CELEC',ARD) + SAM('UTAX',ARD)) / (SUM(ARD$MARD(ARD,A,RD), SAM('CELEC',ARD))/PQ0('CELEC'));
+*FH 15052019 Include similar for coal high and low
+ PQI0('CCOAL-HGH',A,RD)$(QINTA0(A,RD)*ica('CCOAL-HGH',A,RD))
+         = SUM(ARD$MARD(ARD,A,RD), SAM('CCOAL-HGH',ARD) + SAM('UTAX-CH',ARD)) / (SUM(ARD$MARD(ARD,A,RD), SAM('CCOAL-HGH',ARD))/PQ0('CCOAL-HGH'));
+ PQI0('CCOAL-LOW',A,RD)$(QINTA0(A,RD)*ica('CCOAL-LOW',A,RD))
+         = SUM(ARD$MARD(ARD,A,RD), SAM('CCOAL-LOW',ARD) + SAM('UTAX-CL',ARD)) / (SUM(ARD$MARD(ARD,A,RD), SAM('CCOAL-LOW',ARD))/PQ0('CCOAL-LOW'));
+
+*fh11062019
+ PQE0(C,RW)$PE0(C,RW)=PE0(C,RW);
+ PQE0('CCOAL-HGH',RW)$PE0('CCOAL-HGH',RW)= (SAM('CCOAL-HGH','ROW')+SAM('UTAX-CH','ROW'))/(SAM('CCOAL-HGH','ROW')/PE0('CCOAL-HGH','REST'));
 
 *utax code
  tui0(C,A,RD) = 0;
  tui0(C,A,RD)$PQ0(C) = (PQI0(C,A,RD) - PQ0(C))/PQ0(C);
  tui(C,A,RD) = tui0(C,A,RD);
+
+*fh11062019
+ tue0(C,RW)=0;
+ tue0(C,RW)$PE0(C,RW)=(PQE0(C,RW) - PE0(C,RW))/PE0(C,RW);
+ tue(C,RW) = tue0(C,RW);
 
 *utax code
 * pinta0(A,RD)      = SUM(C, ica(C,A,RD)*PQ0(C)) ;
@@ -783,7 +777,6 @@ SET
 
  WF_BAR(F) = WF0(F) ;
 
-
 *Wage distortion factor
  wfdist0(F,A,RD)$WF0(F) = WFA(F,A,RD)/WF0(F);
 
@@ -830,32 +823,17 @@ SET
            + SUM(CTM, SAM(CT,CTM)) ) / PQ0(CT) ;
 
 *CET transformation
-* deltat(C)$(CE(C) AND CD(C))
-*   = 1 / (1 + PDS0(C)/PE0(C)*(QE0(C)/QD0(C))**(rhot(C)-1));
-*
-* alphat(C)$(CE(C) AND CD(C))
-*   = QX0(C) / (deltat(C)*QE0(C)**rhot(C) + (1-deltat(C))
-*                 *QD0(C)**rhot(C))**(1/rhot(C));
-
-*CET transformation
+* deltat0(C,RW)$(CERW(C,RW))
+*   = (PE0(C,RW)*(QE0(C,RW))**(1-rhot(C)))/( SUM(RWP$CERW(C,RWP), PE0(C,RWP)*QE0(C,RWP)**(1-rhot(C))) + (PDS0(C)*QD0(C)**(1-rhot(C))) );
+*UTAX
+*fh 25062019 account for price differential on coal-hgh exports
  deltat0(C,RW)$(CERW(C,RW))
-   = (PE0(C,RW)*(QE0(C,RW))**(1-rhot(C)))/( SUM(RWP$CERW(C,RWP), PE0(C,RWP)*QE0(C,RWP)**(1-rhot(C))) + (PDS0(C)*QD0(C)**(1-rhot(C))) );
+   = (PQE0(C,RW)*(QE0(C,RW))**(1-rhot(C)))/( SUM(RWP$CERW(C,RWP), PQE0(C,RWP)*QE0(C,RWP)**(1-rhot(C))) + (PDS0(C)*QD0(C)**(1-rhot(C))) );
  deltat(C,RW) =  deltat0(C,RW);
 
  alphat0(C)$(CE(C) AND CD(C))
    = QX0(C)/(SUM(RW$CERW(C,RW), deltat(C,RW)*QE0(C,RW)**rhot(C))  + ((1-SUM(RW$CERW(C,RW), deltat(C,RW)))*QD0(C)**( rhot(C))) )**(1/rhot(C));
  alphat(C) =  alphat0(C);
-
-*Armington aggregation
-* predelta(C)$(CM(C) AND CD(C))
-*   = (PM0(C)/(PDD0(C)))*(QM0(C)/QD0(C))**(1+rhoq(C)) ;
-*
-* deltaq(C)$(CM(C) AND CD(C))
-*   = predelta(C)/(1 + predelta(C)) ;
-*
-* alphaq(C)$(CM(C) AND CD(C))
-*               = QQ0(C)/(deltaq(C)*QM0(C)**(-rhoq(C))
-*                 +(1-deltaq(C))*QD0(C)**(-rhoq(C)))**(-1/rhoq(C)) ;
 
 *Armington aggregation
  deltaq0(C,RW)$CMRW(C,RW) = (PM0(C,RW)*(QM0(C,RW))**(1+rhoq(C)))/( SUM(RWP$CMRW(C,RWP), PM0(C,RWP)*QM0(C,RWP)**(1+rhoq(C))) + (PDD0(C)*QD0(C)**(1+rhoq(C))) );
@@ -880,9 +858,7 @@ SET
  trnsfr('ROW',F)    = SAM('ROW',F)/EXR0;
 
 *Remit abroad returns in electricity sector
-* trnsfr('ROW',F) = 0;
  rf(F) = 0;
-* rf(F)$(SAM('TOTAL',F) - TAXPAR('FACTAX',F)) = SAM('ROW',F) / (SAM('TOTAL',F) - TAXPAR('FACTAX',F));
 
 *Transfers from RoW to institutions
  trnsfr(INSD,'ROW') = SAM(INSD,'ROW')/EXR0;
@@ -904,7 +880,6 @@ SET
  TRII0(INSDNG,INSDNGP) = SAM(INSDNG,INSDNGP);
 
 *Share of dom non-gov institution in income of other dom non-gov institutions (net of direct taxes and savings).
-* shii(INSDNG,INSDNGP)$(SAM('TOTAL',INSDNGP) - TAXPAR('INSTAX',INSDNGP) - SAM('S-I',INSDNGP))
  shii(INSDNG,INSDNGP)$((SAM('TOTAL',INSDNGP) - TAXPAR('INSTAX',INSDNGP) - SUM(IT, SAM(IT,INSDNGP))))
          = SAM(INSDNG,INSDNGP)
    /(SAM('TOTAL',INSDNGP) - TAXPAR('INSTAX',INSDNGP) - SUM(IT, SAM(IT,INSDNGP)));
@@ -938,7 +913,9 @@ SET
 *Household consumption spending and consumption quantities.
 *utax code
 * EH0(H)         = SUM(C, SAM(C,H)) + SUM(A, QHA0(A,H)*PA0(A));
- EH0(H)         = SUM(C, SAM(C,H)) + SAM('UTAX',H) + SUM(A, QHA0(A,H)*PA0(A));
+*FH 20052019
+* EH0(H)         = SUM(C, SAM(C,H)) + SAM('UTAX',H) + SUM(A, QHA0(A,H)*PA0(A));
+ EH0(H)         = SUM(C, SAM(C,H)) + SAM('UTAX',H) + SAM('UTAX-CH',H) + SUM(A, QHA0(A,H)*PA0(A));
 
 * utax code
  QH0(C,H)$PQ0(C) = SAM(C,H)/PQ0(C);
@@ -946,7 +923,12 @@ SET
 
 * utax code
  PQH0(C,H) = PQ0(C);
+*FH 20052019
+* PQH0('CELEC',H) = (SAM('CELEC',H)+SAM('UTAX',H))/QH0('CELEC',H);
  PQH0('CELEC',H) = (SAM('CELEC',H)+SAM('UTAX',H))/QH0('CELEC',H);
+
+*FH 15052019 Include same for coal high
+ PQH0('CCOAL-HGH',H)$QH0('CCOAL-HGH',H) = (SAM('CCOAL-HGH',H)+SAM('UTAX-CH',H))/QH0('CCOAL-HGH',H);
 
 * utax code
  tuh0(C,H) = 0;
@@ -964,19 +946,34 @@ SET
  GSAV0         = SUM(IT, SAM(IT,'GOV'));
 
 *LES calibration ----------------------------------------------
-
-
 *utax code
 * BUDSHR(C,H)$(SUM(CP, SAM(CP,H)) + SUM(AP, QHA0(AP,H)*PA0(AP)))
 *         = SAM(C,H)/(SUM(CP, SAM(CP,H)) + SUM(AP, QHA0(AP,H)*PA0(AP)));
+*FH 20052019
+$ONTEXT
  BUDSHR(C,H)$(SUM(CP, SAM(CP,H)) + SAM('UTAX',H)+SUM(AP, QHA0(AP,H)*PA0(AP)))
          = SAM(C,H)/(SUM(CP, SAM(CP,H)) +SAM('UTAX',H) + SUM(AP, QHA0(AP,H)*PA0(AP)));
+
  BUDSHR('CELEC',H)$(SUM(CP, SAM(CP,H)) + SAM('UTAX',H) + SUM(AP, QHA0(AP,H)*PA0(AP)))
          = (SAM('CELEC',H)+SAM('UTAX',H))/(SUM(CP, SAM(CP,H)) +SAM('UTAX',H) + SUM(AP, QHA0(AP,H)*PA0(AP)));
 
  BUDSHR2(A,H)$(SUM(CP, SAM(CP,H)) +SAM('UTAX',H) + SUM(AP, QHA0(AP,H)*PA0(AP)))
          = QHA0(A,H)*PA0(A)
                   /(SUM(CP, SAM(CP,H)) +SAM('UTAX',H) + SUM(AP, QHA0(AP,H)*PA0(AP)));
+$OFFTEXT
+
+ BUDSHR(C,H)$(SUM(CP, SAM(CP,H)) + SAM('UTAX',H)+ SAM('UTAX-CH',H)+SUM(AP, QHA0(AP,H)*PA0(AP)))
+         = SAM(C,H)/(SUM(CP, SAM(CP,H)) +SAM('UTAX',H)+ SAM('UTAX-CH',H) + SUM(AP, QHA0(AP,H)*PA0(AP)));
+
+ BUDSHR('CELEC',H)$(SUM(CP, SAM(CP,H)) + SAM('UTAX',H) + SUM(AP, QHA0(AP,H)*PA0(AP)))
+         = (SAM('CELEC',H)+SAM('UTAX',H))/(SUM(CP, SAM(CP,H)) +SAM('UTAX',H)+ SAM('UTAX-CH',H) + SUM(AP, QHA0(AP,H)*PA0(AP)));
+
+ BUDSHR('CCOAL-HGH',H)$(SUM(CP, SAM(CP,H)) + SAM('UTAX-CH',H) + SUM(AP, QHA0(AP,H)*PA0(AP)))
+         = (SAM('CCOAL-HGH',H)+SAM('UTAX-CH',H))/(SUM(CP, SAM(CP,H))+SAM('UTAX',H)+SAM('UTAX-CH',H) + SUM(AP, QHA0(AP,H)*PA0(AP)));
+
+ BUDSHR2(A,H)$(SUM(CP, SAM(CP,H)) +SAM('UTAX',H)+ SAM('UTAX-CH',H) + SUM(AP, QHA0(AP,H)*PA0(AP)))
+         = QHA0(A,H)*PA0(A)
+                  /(SUM(CP, SAM(CP,H)) +SAM('UTAX',H)+ SAM('UTAX-CH',H) + SUM(AP, QHA0(AP,H)*PA0(AP)));
 
  BUDSHRCHK(H)   = SUM(C, BUDSHR(C,H)) + SUM(A, BUDSHR2(A,H)) - 1 ;
 
@@ -999,9 +996,9 @@ SET
 * gammam0(C,H)$BUDSHR(C,H)
 *     =  ( (SUM(CP, SAM(CP,H)) + SUM(AP, QHA0(AP,H)*PA0(AP))) / PQ0(C) ) * ( BUDSHR(C,H) + betam(C,H)/FRISCH(H));
  gammam0(C,H)$BUDSHR(C,H)
-     =  ( (SUM(CP, SAM(CP,H)) + SAM('UTAX',H) + SUM(AP, QHA0(AP,H)*PA0(AP))) / PQH0(C,H) ) * ( BUDSHR(C,H) + betam(C,H)/FRISCH(H));
-
-
+*FH 20052019
+*     =  ( (SUM(CP, SAM(CP,H)) + SAM('UTAX',H) + SUM(AP, QHA0(AP,H)*PA0(AP))) / PQH0(C,H) ) * ( BUDSHR(C,H) + betam(C,H)/FRISCH(H));
+     =  ( (SUM(CP, SAM(CP,H)) + SAM('UTAX',H)+ SAM('UTAX-CH',H) + SUM(AP, QHA0(AP,H)*PA0(AP))) / PQH0(C,H) ) * ( BUDSHR(C,H) + betam(C,H)/FRISCH(H));
 
  gammah0(A,H)$BUDSHR2(A,H)
      =  ( (SUM(CP, SAM(CP,H)) + SUM(AP, QHA0(AP,H)*PA0(AP))) / PA0(A) )
@@ -1064,7 +1061,9 @@ $offtext
 
 *utax code
 * TABS0         = SUM((C,H), SAM(C,H)) + SUM((A,H), QHA0(A,H)*PA0(A)) + SUM(C, SAM(C,'GOV')) + SUM((IT,C), SAM(C,IT)) + SUM(C, SAM(C,'DSTK'));
- TABS0         = SUM((C,H), SAM(C,H)) + SUM(H, SAM('UTAX',H)) + SUM((A,H), QHA0(A,H)*PA0(A)) + SUM(C, SAM(C,'GOV')) + SUM((IT,C), SAM(C,IT)) + SUM(C, SAM(C,'DSTK'));
+*FH 20052019
+* TABS0         = SUM((C,H), SAM(C,H)) + SUM(H, SAM('UTAX',H)) + SUM((A,H), QHA0(A,H)*PA0(A)) + SUM(C, SAM(C,'GOV')) + SUM((IT,C), SAM(C,IT)) + SUM(C, SAM(C,'DSTK'));
+ TABS0         = SUM((C,H), SAM(C,H)) + SUM(H, SAM('UTAX',H))+ sum(H,SAM('UTAX-CH',H)) + SUM((A,H), QHA0(A,H)*PA0(A)) + SUM(C, SAM(C,'GOV')) + SUM((IT,C), SAM(C,IT)) + SUM(C, SAM(C,'DSTK'));
 
  INVSHR0       = SUM(IT, SAM('TOTAL',IT))/TABS0;
 
@@ -1121,6 +1120,7 @@ ALIAS (RDNT,RDNTP);
 
 *utax code
 *Electricity taxes and subsidies
+*FH 15052019 now also includes coal
  tui0(C,AAG,'NAT')$SUM(RDNT, PQI0(C,AAG,RDNT)*QINTA0(AAG,RDNT)*ica0(C,AAG,RDNT))
      = SUM(RDNT, tui0(C,AAG,RDNT)*PQI0(C,AAG,RDNT)*QINTA0(AAG,RDNT)*ica0(C,AAG,RDNT))
          / SUM(RDNT, PQI0(C,AAG,RDNT)*QINTA0(AAG,RDNT)*ica0(C,AAG,RDNT));
@@ -1267,10 +1267,13 @@ VARIABLES
 
  PQI(C,A,RD)
  PQH(C,H)
+ PQE(C,RW)
  DTU(C)
  ALPHAQF                 proportionately adjust capital stocks
  YG_DTAX                 direct tax take plus transfers from abroad
  YG_ITAX                 indirect tax take
+*fh 25062019
+ YG_NTAX                 price differentials (utax code)
  ITAXSHR                 share of indirect taxes in total revenue (may be better if it were GDPMP)
  TAXADJ                  tax adjustment which maintains indirect tax share
  GDPMP                   nominal GDP at market prices
@@ -1347,11 +1350,12 @@ VARIABLES
  YI.L(INS)              = YI0(INS);
  YIF.L(INS,F)           = YIF0(INS,F);
 
- PQI.L(C,A,RD) =  PQI0(C,A,RD);
- PQH.L(C,H)    =  PQH0(C,H);
+ PQI.L(C,A,RD)          =  PQI0(C,A,RD);
+ PQH.L(C,H)             =  PQH0(C,H);
+*FH 25062019
+ PQE.L(C,RW)            =  PQE0(C,RW);
  DTU.L(C) = 0;
  ALPHAQF.L=1;
-
 
 *--------------------------------------------------------------------------------------------
 *5. EQUATIONS
@@ -1430,7 +1434,8 @@ EQUATIONS
 *utax code
  PQIDEF(C,A,RD)
  PQHDEF(C,H)
- PQEDEF
+*FH 25062019
+ PQEDEF(C,RW)
  QFS_FORDEF              transfer capital between types
  QFDEF(F,A,RD)           accomodate factor transfer by proportionately changing factor demands
  QFMAX(F,A,RD)
@@ -1438,6 +1443,8 @@ EQUATIONS
 *CA added equations
  YG_DTAXDEF  define direct taxes plus tranfers to government from abroad
  YG_ITAXDEF  define indirect taxes
+*fh 25062019
+ YG_NTAXDEF  price differentials (utax code)
  ITAXEQ      share of indirect taxes in total revenues (may be better if this were GDPMP)
  MINQFEQ(F)  lower limit on returns to energy capital (complementarity reduces capital usage)
  MAXQFEQ(F)  upper limit on returns to energy capital (spurs purchase of capital to produce energy- incurs debt)
@@ -1466,7 +1473,6 @@ EQUATIONS
 
 
 $include includes\1carbon.inc
-
 *Calibrate Tracking indirect taxation as a share of GDP
  YG_DTAX0 = SUM(INSDNG, TINS0(INSDNG)*YI0(INSDNG))
            + SUM(F, tf0(F)*YF0(F))
@@ -1474,7 +1480,7 @@ $include includes\1carbon.inc
            + trnsfr0('GOV','ROW')*EXR0 ;
 
  YG_ITAX0 =
-           + SUM((A,RD), TVA0(A,RD)*PVA0(A,RD)*QVA0(A,RD))
+           SUM((A,RD), TVA0(A,RD)*PVA0(A,RD)*QVA0(A,RD))
            + SUM((A,RD), TA0(A,RD)*PAR0(A,RD)*QAR0(A,RD))
            + SUM((CM,RW), tm0(CM,RW)*PWM0(CM,RW)*QM0(CM,RW))*EXR0
            + SUM((CE,RW), te0(CE,RW)*PWE0(CE,RW)*QE0(CE,RW))*EXR0
@@ -1482,20 +1488,29 @@ $include includes\1carbon.inc
            + SUM(C, co2c(C)*tco2d*QQ0(C))
            + SUM((CM,RW), co2m(CM,RW)*tco2m*QM0(CM,RW))
            - SUM((CE,RW), co2e(CE,RW)*tco2e*QE0(CE,RW))
+;
+
+*fh 25062019
+ YG_NTAX0 =
 *utax code
-           + SUM((C,A,RD), tui(C,A,RD)*PQ0(C)*QINTA0(A,RD)*ica0(C,A,RD))
+           SUM((C,A,RD), tui(C,A,RD)*PQ0(C)*QINTA0(A,RD)*ica0(C,A,RD))
            + SUM((C,H), tuh(C,H)*PQ0(C)*QH0(C,H))
+           + SUM((C,RW), tue(C,RW)*PE0(C,RW)*QE0(C,RW))
          ;
+parameter
+test(A);
+test(A)=SUM((C,RD), tui('ccoal-hgh',A,RD)*PQ0('ccoal-hgh')*QINTA0(A,RD)*ica0('ccoal-hgh',A,RD));
 
-  Abort$(ABS(YG0 - YG_DTAX0 - YG_ITAX0) GT .0000001) "tax calculations incorrect", YG0, YG_DTAX0, YG_ITAX0;
+  Abort$(ABS(YG0 - YG_DTAX0 - YG_ITAX0 - YG_NTAX0) GT .00000001) "tax calculations incorrect", YG0, YG_DTAX0, YG_ITAX0, YG_NTAX0;
 
-  GDPMP0 = SUM((A,RD), PVA0(A,RD)*(1-TVA0(A,RD))*QVA0(A,RD)) + YG_ITAX0;
+  GDPMP0 = SUM((A,RD), PVA0(A,RD)*(1-TVA0(A,RD))*QVA0(A,RD)) + YG_ITAX0 + YG_NTAX0;
 
-  ITAXSHR0 = YG_ITAX0/GDPMP0;
+  ITAXSHR0 = (YG_ITAX0+YG_NTAX0)/GDPMP0;
   TAXADJ0      = 1;
 
  YG_DTAX.L =    YG_DTAX0 ;
  YG_ITAX.L =    YG_ITAX0 ;
+ YG_NTAX.L =    YG_NTAX0 ;
  ITAXSHR.L =    ITAXSHR0 ;
  TAXADJ.L  =    TAXADJ0  ;
  GDPMP.L   =    GDPMP0   ;
@@ -1680,13 +1695,16 @@ betaca(A,C)=1;
            + SUM(C, TQ(C)*PQ(C)*QQ(C))
            + SUM(C, co2c(C)*tco2d*QQ(C))
            + SUM((CM,RW), co2m(CM,RW)*tco2m*QM(CM,RW))
-           - SUM((CE,RW), co2e(CE,RW)*tco2e*QE(CE,RW))
+           - SUM((CE,RW), co2e(CE,RW)*tco2e*QE(CE,RW));
+
+ YG_NTAXDEF .. YG_NTAX =E=
 *utax code
            + SUM((C,A,RD), tui(C,A,RD)*PQ(C)*QINTA(A,RD)*ica(C,A,RD))
            + SUM((C,H), tuh(C,H)*PQ(C)*QH(C,H))
+           + SUM((C,RW), tue(C,RW)*PE(C,RW)*QE(C,RW))
          ;
 
- YGDEF .. YG =E= YG_DTAX + YG_ITAX;
+ YGDEF .. YG =E= YG_DTAX + YG_ITAX + YG_NTAX;
 
  EGDEF.. EG =E= SUM(C, PQ(C)*QG(C)) + SUM(INSDNG, trnsfr(INSDNG,'GOV')*(1+TRNADJ*trn01(INSDNG)))*CPI;
 
@@ -1737,9 +1755,9 @@ betaca(A,C)=1;
  GDABEQ..  GOVSHR*TABS =E= SUM(C, PQ(C)*QG(C));
 
 *Equations added for this analysis
- GDPMPDEF ..   GDPMP =E= SUM((A,RD), PVA(A,RD)*QVA(A,RD)) + YG_ITAX;
+ GDPMPDEF ..   GDPMP =E= SUM((A,RD), PVA(A,RD)*QVA(A,RD)) + YG_ITAX + YG_NTAX;
 
- ITAXEQ .. ITAXSHR*GDPMP  =E= YG_ITAX ;
+ ITAXEQ .. ITAXSHR*GDPMP  =E= YG_ITAX + YG_NTAX ;
 
  MINQFEQ('FEGY')$QF0('FEGY','AELEC','nat') ..  (1-alphawfdist)*WFK2AV('FCAP') =L= WF('FEGY')*WFDIST('FEGY','AELEC','nat') ;
  MAXQFEQ('FEGY')$QF0('FEGY','AELEC','nat') ..  (1+alphawfdist)*WFK2AV('FCAP') =G= WF('FEGY')*WFDIST('FEGY','AELEC','nat') ;
@@ -1831,6 +1849,7 @@ MODEL STANDCGE  standard CGE model
  QFS_FORDEF
  YG_DTAXDEF
  YG_ITAXDEF
+ YG_NTAXDEF
  ITAXEQ
  GDPMPDEF
 * QFMAX
@@ -1878,6 +1897,7 @@ MODEL STANDCGE  standard CGE model
 *utax code
  PQH.FX(C,H)$(NOT QH0(C,H)) = 0;
  PQI.FX(C,A,RD)$(NOT ica0(C,A,RD)) = 0;
+ PQE.FX(C,RW)$(NOT QE0(C,RW)) = 0;
 
 *--------------------------------------------------------------------------------------------
 *8. MODEL CLOSURE

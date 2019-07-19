@@ -22,11 +22,15 @@ PARAMETER
 
 SET
  REMEXP(C)       remove exports with small shares  /
-         CWATR, CCONS, CTRAD, CGSRV
+*fh 25062019 cut off of 0.1% used. some kept due to importance
+*fh 25062019         CWATR, CCONS, CTRAD, CGSRV
+ cngas, cftrp-o, cfore, cwatr, cgsrv, ccons, cglas, ctrps, cfoot
          /
  REMIMP(C)       remove imports with small shares  /
-         CWATR, CCONS, CTRAD, CGSRV
-         /
+*fh 25062019 cut off of 0.1% used. some kept due to importance
+*fh 25062019         CWATR, CCONS, CTRAD, CGSRV
+cfish, cfore, cwatr, cgsrv, ccomm, ccons
+        /
  REEXPORT(C)     remove imports with re-export problem  /
 
          /
@@ -111,80 +115,8 @@ PARAMETER
 $loaddc SAM AELASTAB DELASTAB FELASTAB YELASTAB EMPTAB WAGETAB MARD REGIMP REGTAR REGEXP REGETX POPTAB
 $load NEST FDATATYPE
 
-*FH 14022019 MAKE ELECTRICITY A NET EXPORT
-* SAM('CELEC','ROW')=SAM('CELEC','ROW')-SAM('ROW','CELEC');
-* SAM('ROW','CELEC')=0;
-
 *RSA: Not sure why this is here (from SAM BUILDER)
  SAM('S-I','DSTK') = 0;
-
-$ontext
-*Move enterprise foreign remittances to capital
-*Makes remittances a fixed proportion of earnings (see RF in model code)
- SAM('ROW','FCAP')   = SAM('ROW','FCAP') + SAM('ROW','ENT-N');
- SAM('ENT-N','FCAP') = SAM('ENT-N','FCAP') - SAM('ROW','ENT-N');
- SAM('ROW','ENT-N')  = 0;
-
-*Create sasol and petrosa capital
- SAM('FPSA','APETR-OIL') = SAM('FCAP','APETR-OIL');
- SAM('FSAS','APETR-CTL') = SAM('FCAP','APETR-CTL');
- SAM('FSAS','APETR-GTL') = SAM('FCAP','APETR-GTL');
-
- SAM('FCAP','APETR-OIL') = 0;
- SAM('FCAP','APETR-CTL') = 0;
- SAM('FCAP','APETR-GTL') = 0;
-
- SAM('ENT-N','FPSA') = SUM(ACNT, SAM('FPSA',ACNT));
- SAM('ENT-N','FSAS') = SUM(ACNT, SAM('FSAS',ACNT));
- SAM('ENT-N','FCAP') = SAM('ENT-N','FCAP') - SAM('ENT-N','FPSA') - SAM('ENT-N','FSAS');
-$offtext
-
-$ontext
-*Remove sector specific price distortions
- SAM('CELEC',ARD) = SAM('CELEC',ARD) + SAM('UTAX',ARD);
- SAM('UTAX',ARD) = 0;
- SAM('ENT-E','UTAX') = 0;
- SAM('GOV','UTAX') = SUM(H, SAM('UTAX',H));
- SAM('S-I','GOV') = SAM('S-I','GOV')+SAM('GOV','UTAX');
- SAM('S-I','ROW')   = SAM('S-I','ROW') + SUM(ACNT, SAM(ACNT,'S-I') - SAM('S-I',ACNT));
-
- SAM('TOTAL',AC) = 0;
- SAM(AC,'TOTAL') = 0;
- SAM('TOTAL',AC) = SUM(ACNT, SAM(ACNT,AC));
- SAM(AC,'TOTAL') = SUM(ACNT, SAM(AC,ACNT));
- SAMBALCHK(AC)   = SAM('TOTAL',AC) - SAM(AC,'TOTAL');
-$offtext
-
-$ontext
- SAM('CELEC',ACNT) = SAM('CELEC',ACNT) + SAM('UTAX',ACNT);
- SAM('UTAX',ACNT) = 0;
- SAM('ENT-E','UTAX') = 0;
-$offtext
-
-*CORRECTIONS: Increase imports and exports by same amount to hit target (???)
-*FH 14022019 REMOVED
-* SAM('ROW','CELEC') = SAM('ROW','CELEC') + 0.21* SAM('CELEC','ROW');
-* SAM('CELEC','ROW') = SAM('CELEC','ROW') + 0.21* SAM('CELEC','ROW');
-
-*FH 30/01/19: Code no longer needed. No discard coal. No energy by technology.
-*Move discard coal to low grade coal
-* SAM(ACNT,'CCOAL-LOW') = SAM(ACNT,'CCOAL-LOW')+SAM(ACNT,'CCOAL-DIS');
-* SAM('CCOAL-LOW',ACNT) = SAM('CCOAL-LOW',ACNT)+SAM('CCOAL-DIS',ACNT);
-* SAM(ACNT,'CCOAL-DIS') = 0;
-* SAM('CCOAL-DIS',ACNT) = 0;
-
-*FH Changed: value for exports was negative. Code removed.
-* SAM('CCOAL-LOW','ROW') = SAM('CCOAL-LOW','ROW') + SAM('CCOAL-LOW','DSTK');
-* SAM('ROW','CCOAL-LOW') = SAM('CCOAL-LOW','ROW') + SAM('CCOAL-LOW','DSTK');
-* SAM('CCOAL-LOW','DSTK') = 0;
-* SAM('DSTK','S-I') = SUM(C, SAM(C,'DSTK'));
-* SAM('S-I','ROW') = 0;
-* SAM('S-I','ROW') = SUM(ACNT, SAM('ROW',ACNT) - SAM(ACNT,'ROW'));
-
-* SAM(ACNT,'AELEC-CLW') = SAM(ACNT,'AELEC-CLW')+SAM(ACNT,'AELEC-CDS');
-* SAM('AELEC-CLW',ACNT) = SAM('AELEC-CLW',ACNT)+SAM('AELEC-CDS',ACNT);
-* SAM(ACNT,'AELEC-CDS') = 0;
-* SAM('AELEC-CDS',ACNT) = 0;
 
 *----------------------------------------------------------------------------
 *3. Adjustments to the SAM (based on set definition above)
@@ -237,17 +169,6 @@ $offtext
  SAM(CTM,C)$(EXPX(C) + IMPX(C) + DOMX(C)) = IMPX(C) / (EXPX(C) + IMPX(C) + DOMX(C)) * SAM('TRC',C);
  SAM(CTD,C)$(EXPX(C) + IMPX(C) + DOMX(C)) = DOMX(C) / (EXPX(C) + IMPX(C) + DOMX(C)) * SAM('TRC',C);
 
-$ontext
-*FH: Fix exports problem - physical energy units is too low ---
- SAM(CTE,'CPETR_P') = 0;
- SAM(CTE,'CPETR_O') = 0;
- SAM(CTE,'CPETR_D') = 0;
-
- SAM(CTD,'CPETR_P')$(EXPX('CPETR_P') + IMPX('CPETR_P') + DOMX('CPETR_P')) = (DOMX('CPETR_P')+EXPX('CPETR_P')) / (EXPX('CPETR_P') + IMPX('CPETR_P') + DOMX('CPETR_P')) * SAM('TRC','CPETR_P');
- SAM(CTD,'CPETR_O')$(EXPX('CPETR_O') + IMPX('CPETR_O') + DOMX('CPETR_O')) = (DOMX('CPETR_O')+EXPX('CPETR_O')) / (EXPX('CPETR_O') + IMPX('CPETR_O') + DOMX('CPETR_O')) * SAM('TRC','CPETR_O');
- SAM(CTD,'CPETR_D')$(EXPX('CPETR_D') + IMPX('CPETR_D') + DOMX('CPETR_D')) = (DOMX('CPETR_D')+EXPX('CPETR_D')) / (EXPX('CPETR_D') + IMPX('CPETR_D') + DOMX('CPETR_D')) * SAM('TRC','CPETR_D');
-$offtext
-
  SAM(C,CTE) = TRSHR(C) * SUM(CP, SAM(CTE,CP));
  SAM(C,CTM) = TRSHR(C) * SUM(CP, SAM(CTM,CP));
  SAM(C,CTD) = TRSHR(C) * SUM(CP, SAM(CTD,CP));
@@ -268,7 +189,6 @@ $offtext
 
 *bm/sr/fh calling 1sambal to cleanout small errors
 $INCLUDE includes\1sambal.inc
-
 
 *Define mapping set MAC
  MAC(A,C)        = NO;
@@ -489,20 +409,13 @@ $gdxin
 *Primary fuel production quantities (PJ)
  QPROD('CCOAL-LOW','NAT') = CALIB('CCOAL-LOW','QA');
  QPROD('CCOAL-HGH','NAT') = CALIB('CCOAL-HGH','QA');
- QPROD('ACOAL','NAT')     = QPROD('CCOAL-LOW','NAT') + QPROD('CCOAL-HGH','NAT');
+*fh
+* QPROD('ACOAL','NAT')     = QPROD('CCOAL-LOW','NAT') + QPROD('CCOAL-HGH','NAT');
+ QPROD('ACOAL','NAT')     = QPROD('CCOAL-LOW','NAT') + QPROD('CCOAL-HGH','NAT')+SAM('ACOAL','CMORE')+SAM('ACOAL','CMINE');
  QPROD('ANGAS','NAT')     = CALIB('CNGAS','QA');
  QPROD('ACOIL','NAT')     = CALIB('CCOIL','QA');
 *FH 19032019
  QPROD('AHYDR','NAT')     = CALIB('CHYDR','QA');
-
-$ontext
-*Petroleum production quantities (TJ)
- QPROD('APETR','OIL') = CALIB('APETR-OIL','QA')/1000;
- QPROD('APETR','CTL') = CALIB('APETR-CTL','QA')/1000;
- QPROD('APETR','GTL') = CALIB('APETR-GTL','QA')/1000;
- QPROD('APETR','BIO') = CALIB('APETR-BIO','QA')/1000;
- QPROD('APETR','NAT') = QPROD('APETR','OIL') + QPROD('APETR','CTL') + QPROD('APETR','GTL') + QPROD('APETR','BIO');
-$offtext
 
 *Petroleum production quantities (PJ)
  QPROD('CPETR_P','NAT') = CALIB('CPETR_P','QA');

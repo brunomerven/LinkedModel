@@ -75,6 +75,11 @@
  WFDISTX(F,A,RD,XC,TC,TT) = WFDIST.L(F,A,RD);
  YFX(F,XC,TC,TT)          = YF.L(F);
  YGX(XC,TC,TT)            = YG.L;
+*fh 01072019
+ YG_DTAXX(XC,TC,TT)       = YG_DTAX.L;
+ YG_ITAXX(XC,TC,TT)       = YG_ITAX.L;
+ YG_NTAXX(XC,TC,TT)       = YG_NTAX.L;
+
  YIFX(INS,F,XC,TC,TT)     = YIF.L(INS,F);
  YIX(INS,XC,TC,TT)        = YI.L(INS);
  trnsfrx(INS,ACNT,XC,TC,TT) = trnsfr(INS,ACNT);

@@ -278,8 +278,9 @@ $offtext
 *          AFX('APETR',RD)$(NOT EFX(TT,TC) AND QFSUPX('FSAS',XC,TC-1,TT) LT .9) = YES;
 
          AFX('AHYDR',RD) = NO;
-*         AFX('AHYDR',RD)$(SUM(A,ICA('CHYDR',A,'nat')) GT 0.001) = YES;
-         AFX('AHYDR',RD)$(NOT T1(TC)) = YES;
+         AFX('AHYDR',RD)$(SUM(A,ICA('CHYDR',A,'nat')) GT 0.001) = YES;
+*         AFX('AHYDR',RD)$(NOT T1(TC)) = YES;
+         AFLEO('AHYDR') = NO;
          AFLEO('AHYDR')$(SUM(A,ICA('CHYDR',A,'nat')) GT 0.001) = YES;
 
 
