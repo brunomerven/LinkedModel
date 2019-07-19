@@ -31,8 +31,10 @@ PARAMETER
  GOVGR(X,T)              government consumption expenditure growth
  FSAVGR(X,T)             foreign savings growth rate (positive if increasing)
  GSAVGR(X,T)             government savings growth rate (positive if increasing)
- PWEGR(C,X,T)            world export price changes
- PWMGR(C,X,T)            world import price changes
+* PWEGR(C,X,T)            world export price changes
+* PWMGR(C,X,T)            world import price changes
+ PWEGR(C,RUN,T)            world export price changes
+ PWMGR(C,RUN,T)            world import price changes
  TRNSFRGR(INS,AC,X,T)    exogenous institutional transfer changes
  POPGR(H,X,T)            household population growth projections
  MPSGR(X,T)              private savings growth rate
@@ -234,10 +236,12 @@ LOOP(TC$(NOT TPAST(TC)),
 *FH: REMOVED CODE AND RESET TO ORIGINAL CODE
 * PWMGR(C,XC,TC)          = PWGR(C,XC,TC);
 * PWEGR(C,XC,TC)          = PWGR(C,XC,TC);
- PWMGR(C,XC,TC)          = MISCPROJ('PWM',XC,TC)/100;
- PWEGR(C,XC,TC)          = MISCPROJ('PWE',XC,TC)/100;
+ PWMGR(C,RUN,TC)          = PWGR(C,RUN,TC);
+ PWEGR(C,RUN,TC)          = PWGR(C,RUN,TC);
+* PWMGR(C,XC,TC)          = MISCPROJ('PWM',XC,TC)/100;
+* PWEGR(C,XC,TC)          = MISCPROJ('PWE',XC,TC)/100;
 *FH: including coal
- PWEGR('ccoal-hgh',XC,TC) = PWGR('ccoal-hgh',XC,TC);
+* PWEGR('ccoal-hgh',XC,TC) = PWGR('ccoal-hgh',XC,TC);
 
 *Growth of fixed factor sectors. Convert to fraction from percent.
 * AFXGR(A,RD,XC,TC)$AFX(A,RD) = AFXPROJ(A,RD,XC,TC)/100;
@@ -259,8 +263,9 @@ LOOP(TC$(NOT TPAST(TC)),
  GOVGR(X,T1)           = 0;
  FSAVGR(X,T1)          = 0;
  GSAVGR(X,T1)          = 0;
- PWEGR(C,X,T1)         = 0;
- PWMGR(C,X,T1)         = 0;
+* PWEGR(C,X,T1)         = 0;
+* PWMGR(C,X,T1)         = 0;
+ PWGR(C,RUN,T1)            =0;
  TRNSFRGR(INS,AC,X,T1) = 0;
  AFXGR(A,RD,X,T1)      = 0;
  MPSGR(X,T1)           = 0;

@@ -4,7 +4,9 @@
 
 * Previous: SFORE(FS,XC,T) = SUM((A,RD)$MFSA(FS,A), PVA0(A,RD)*QVAX(A,RD,XC,T,TT));
 * changed to output as that's the main driver
+* SFORE(FS,XC,T) = SUM(A$MFSA(FS,A), QVAX(A,'nat',XC,T,TT));
  SFORE(FS,XC,T) = SUM(A$MFSA(FS,A), QAX(A,XC,T,TT));
+
  HFORE(FH,XC,TC)$SUM(H$MFHH(FH,H), HPOPX(H,XC,TC,TT)) = SUM(H$MFHH(FH,H), YIX(H,XC,TC,TT)/HPOPX(H,XC,TC,TT))/CPIX(XC,TC,TT);
  PFORE(FH,XC,TC) = SUM(H$MFHH(FH,H), HPOPX(H,XC,TC,TT));
 
@@ -107,16 +109,19 @@ $offtext
     TRAMOD = SIM_TRAMOD(RUN);
 
 * write new demand driver values to demand workbook
+
+  if(SFORE_X('COM','2050'),
     execute_unload "MCDem.gdx" POPSX SFORE_X GDP_FSX TRAMOD TFHPOPMY YHE MFHHT PAMS
     execute 'gdxxrw.exe i=MCDem.gdx o=SATM\DMD_PRJ.xlsx index=index_G2E!a6';
+  );
 
 
   ELSE
 
 
 *    EPROJ(ALS,XC,TC,TT) = (SUM(RD, QARX(ALS,RD,XC,TC,TT)) + SUM(RW, SUM(C$mAC(ALS,C),QMX(C,RW,XC,TC,TT))))/UCONV_A_T2C(ALS);
-    EPROJ('AELEC',XC,TC,TT) = (SUM(RD, QARX('AELEC',RD,XC,TC,TT)) + SUM(RW, QMX('CELEC',RW,XC,TC,TT)))*3.6;
-    EPROJ('APETR',XC,TC,TT) = (SUM(RD, QARX('APETR',RD,XC,TC,TT)) + SUM(RW, QMX('CPETR',RW,XC,TC,TT)))*36.35;
+*    EPROJ('AELEC',XC,TC,TT) = (SUM(RD, QARX('AELEC',RD,XC,TC,TT)) + SUM(RW, QMX('CELEC',RW,XC,TC,TT)))*3.6;
+*    EPROJ('APETR',XC,TC,TT) = (SUM(RD, QARX('APETR',RD,XC,TC,TT)) + SUM(RW, QMX('CPETR',RW,XC,TC,TT)))*36.35;
 *extrapolation to 2050 - remove when running CGE to 2050
     EPROJGR(A,'2045')$EPROJ(A,XC,'2035',TT) = EPROJ(A,XC,'2040',TT)/EPROJ(A,XC,'2035',TT);
     EPROJ(A,XC,'2045',TT) = EPROJ(A,XC,'2040',TT)*EPROJGR(A,'2045');

@@ -1,0 +1,11 @@
+Transport T3 linked runs that crash:
+
+T3P1S5RM-UCE-L is now working
+
+but T3P2S5PM-UCE-L is not
+
+
+
+Hydrogen production changing between TTs.
+This seems to be causing an issue in the CGE. Not sure why.
+It's now a 2019 problem!

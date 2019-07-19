@@ -1,0 +1,155 @@
+SET ALL_REG /
+  'REGION1'
+/;
+SET REG /
+  'REGION1'                  'South Africa                                      '
+/;
+SET COM_GRP /
+  'ZDUMETRANS'               'dummy commodity for transmission dummy cost accoun'
+/;
+SET UC_N /
+/;
+SET UC_N_UCRT /
+/;
+SET COM /
+  'ZDUMETRANS'               'dummy commodity for transmission dummy cost accoun'
+/;
+SET COM_NRG /
+  'REGION1'   .'ZDUMETRANS'
+/;
+SET COM_ANNUAL /
+  'REGION1'   .'ZDUMETRANS'
+/;
+SET COM_NRGELC /
+  'REGION1'   .'ZDUMETRANS'
+/;
+SET PRC /
+  'ETCLEARNO-E'              'ARNOT                                             '
+  'ETCLECAMD-E'              'CAMDEN                                            '
+  'ETCLEDUVH-E'              'DUVHA                                             '
+  'ETCLEGROO-E'              'GROOTVLEI                                         '
+  'ETCLEHEND-E'              'HENDRINA                                          '
+  'ETCLEKEND-E'              'KENDAL                                            '
+  'ETCLEKOMA-E'              'KOMATI                                            '
+  'ETCLEKRIE-E'              'KRIEL                                             '
+  'ETCLELETH-E'              'LETHABO                                           '
+  'ETCLEMAJD-E'              'MAJUBA DRY                                        '
+  'ETCLEMAJW-E'              'MAJUBA WET                                        '
+  'ETCLEMATI-E'              'MATIMBA                                           '
+  'ETCLEMATL-E'              'MATLA                                             '
+  'ETCLETUTU-E'              'TUTUKA                                            '
+  'ETNUC-E'                  'Nuclear Existing                                  '
+  'ETRANS'                   'Transmission                                      '
+  'ETRANSDUM'                'dummy tech tracking investment costs              '
+/;
+SET PRC_PRE /
+  'REGION1'   .'ETRANS'
+/;
+SET PRC_ELE /
+  'REGION1'   .'ETCLEARNO-E'
+  'REGION1'   .'ETCLECAMD-E'
+  'REGION1'   .'ETCLEDUVH-E'
+  'REGION1'   .'ETCLEGROO-E'
+  'REGION1'   .'ETCLEHEND-E'
+  'REGION1'   .'ETCLEKEND-E'
+  'REGION1'   .'ETCLEKOMA-E'
+  'REGION1'   .'ETCLEKRIE-E'
+  'REGION1'   .'ETCLELETH-E'
+  'REGION1'   .'ETCLEMAJD-E'
+  'REGION1'   .'ETCLEMAJW-E'
+  'REGION1'   .'ETCLEMATI-E'
+  'REGION1'   .'ETCLEMATL-E'
+  'REGION1'   .'ETCLETUTU-E'
+  'REGION1'   .'ETNUC-E'
+  'REGION1'   .'ETRANSDUM'
+/;
+SET PRC_SEASON /
+  'REGION1'   .'ETNUC-E'
+/;
+SET PRC_WEEKLY /
+  'REGION1'   .'ETCLEARNO-E'
+  'REGION1'   .'ETCLECAMD-E'
+  'REGION1'   .'ETCLEDUVH-E'
+  'REGION1'   .'ETCLEGROO-E'
+  'REGION1'   .'ETCLEHEND-E'
+  'REGION1'   .'ETCLEKEND-E'
+  'REGION1'   .'ETCLEKOMA-E'
+  'REGION1'   .'ETCLEKRIE-E'
+  'REGION1'   .'ETCLELETH-E'
+  'REGION1'   .'ETCLEMAJD-E'
+  'REGION1'   .'ETCLEMAJW-E'
+  'REGION1'   .'ETCLEMATI-E'
+  'REGION1'   .'ETCLEMATL-E'
+  'REGION1'   .'ETCLETUTU-E'
+/;
+SET PRC_DAYNIT /
+  'REGION1'   .'ETRANS'
+  'REGION1'   .'ETRANSDUM'
+/;
+SET ACOM_UNIT /
+  'REGION1'.'ZDUMETRANS'.'PJ'
+/;
+SET PRCTACTUNT /
+  'REGION1'.'ETCLEARNO-E'.'PJ'
+  'REGION1'.'ETCLECAMD-E'.'PJ'
+  'REGION1'.'ETCLEDUVH-E'.'PJ'
+  'REGION1'.'ETCLEGROO-E'.'PJ'
+  'REGION1'.'ETCLEHEND-E'.'PJ'
+  'REGION1'.'ETCLEKEND-E'.'PJ'
+  'REGION1'.'ETCLEKOMA-E'.'PJ'
+  'REGION1'.'ETCLEKRIE-E'.'PJ'
+  'REGION1'.'ETCLELETH-E'.'PJ'
+  'REGION1'.'ETCLEMAJD-E'.'PJ'
+  'REGION1'.'ETCLEMAJW-E'.'PJ'
+  'REGION1'.'ETCLEMATI-E'.'PJ'
+  'REGION1'.'ETCLEMATL-E'.'PJ'
+  'REGION1'.'ETCLETUTU-E'.'PJ'
+  'REGION1'.'ETNUC-E'.'PJ'
+  'REGION1'.'ETRANS'.'PJ'
+  'REGION1'.'ETRANSDUM'.'PJ'
+/;
+PARAMETER APRCACTUNT /
+  'REGION1'                 .'ETRANSDUM'               .'ZDUMETRANS'                 1
+/;
+PARAMETER APRCCAPACT /
+  'REGION1'                 .'ETRANSDUM'                  31.536
+/;
+PARAMETER ATOP_OUT /
+  'REGION1'                 .'ETRANSDUM'               .'ZDUMETRANS'                 1
+/;
+       TABLE ANCAP_BND
+                                                                                     0     2012            2013            2014            2015            2016            2017            2018            2019            2020            2021            2022            2023            2024            2025            2026            2027            2028            2029            2030            2031            2032            2033            2034            2035            2036            2037            2038            2039            2040            2045            2050            2060            2070            
+  'REGION1'                 .'ETRANSDUM'               .'UP'                              EPS                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+;
+       TABLE ANCAP_COST
+                                                          0     2012            2013            2014            2015            2016            2017            2018            2019            2020            2021            2022            2023            2024            2025            2026            2027            2028            2029            2030            2031            2032            2033            2034            2035            2036            2037            2038            2039            2040            2045            2050            2060            2070            
+  'REGION1'                 .'ETRANSDUM'                        .1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+;
+       TABLE ANCAP_FOM
+                                                          0     2012            2013            2014            2015            2016            2017            2018            2019            2020            2021            2022            2023            2024            2025            2026            2027            2028            2029            2030            2031            2032            2033            2034            2035            2036            2037            2038            2039            2040            2045            2050            2060            2070            
+  'REGION1'                 .'ETCLEARNO-E'                      895                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+  'REGION1'                 .'ETCLECAMD-E'                      895                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+  'REGION1'                 .'ETCLEDUVH-E'                      895                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+  'REGION1'                 .'ETCLEGROO-E'                      895                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+  'REGION1'                 .'ETCLEHEND-E'                      895                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+  'REGION1'                 .'ETCLEKEND-E'                      895                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+  'REGION1'                 .'ETCLEKOMA-E'                      895                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+  'REGION1'                 .'ETCLEKRIE-E'                      895                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+  'REGION1'                 .'ETCLELETH-E'                      895                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+  'REGION1'                 .'ETCLEMAJD-E'                      895                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+  'REGION1'                 .'ETCLEMAJW-E'                      895                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+  'REGION1'                 .'ETCLEMATI-E'                      895                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+  'REGION1'                 .'ETCLEMATL-E'                      895                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+  'REGION1'                 .'ETCLETUTU-E'                      895                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+  'REGION1'                 .'ETNUC-E'                          683                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+  'REGION1'                 .'ETRANS'                           793.62                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
+  'REGION1'                 .'ETRANSDUM'                        .1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+;
+       TABLE ANCAPTLIFE
+                                                          0     2012            2013            2014            2015            2016            2017            2018            2019            2020            2021            2022            2023            2024            2025            2026            2027            2028            2029            2030            2031            2032            2033            2034            2035            2036            2037            2038            2039            2040            2045            2050            2060            2070            
+  'REGION1'                 .'ETRANSDUM'                        60                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+;
+       TABLE APRC_RESID
+                                                          0     2012            2013            2014            2015            2016            2017            2018            2019            2020            2021            2022            2023            2024            2025            2026            2027            2028            2029            2030            2031            2032            2033            2034            2035            2036            2037            2038            2039            2040            2045            2050            2060            2070            
+  'REGION1'                 .'ETRANSDUM'                        45.8            44.902          44.0039         43.1059         42.2079         41.3098         40.4118         39.5137         38.6157         37.8195         37.0233         36.0944         35.2982         34.502          33.5731         32.7769         31.9807         31.0518         30.2556         29.4594         28.5305         27.7343         26.9381         26.0092         25.213          24.4168         23.4879         22.6917         21.8955         17.6491         13.4027         5.0426         EPS
+;

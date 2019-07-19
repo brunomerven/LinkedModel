@@ -111,4 +111,7 @@
   CTA_EMX(A,RUN,XC,TC,TT) = CTA_EM(A);
   CTA_EMRX(A,RUN,XC,TC,TT)= CTA_EMR(A);
   CTA_EMRRX(A,RUN,XC,TC,TT)=CTA_EMRR(A);
-  CTA_EMRRX(A,RUN,XC,TC,'2050')=0;
+*  CTA_EMRRX(A,RUN,XC,TC,'2050')=0;
+
+ deltaqx(c,rw,run,xc,tc,tt)=deltaq(c,rw);
+ deltatx(c,rw,run,xc,tc,tt)=deltat(c,rw);

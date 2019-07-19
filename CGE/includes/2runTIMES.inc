@@ -28,10 +28,10 @@
 
 * Run TIMES model
  execute ".\satm\%TIMESfolder%\ShowRunNumber.CMD"
-* execute ".\satm\%TIMESfolder%\RUNTIMES2.CMD"
+ execute ".\satm\%TIMESfolder%\RUNTIMES2.CMD"
  execute "echo --- Return to CGE model"
 
-
+*execute 'sleep 2';
 
 *--------------------------------------------------------------
 *PASS RESULTS FROM TIMES TO CGE
@@ -41,9 +41,10 @@ loop(MRUNCASE(RUN,TIMESCASE), put_utilities SATIM_Scen 'gdxin' / "%GDXfolder%",T
  execute_load REG_OBJ PAR_NCAPL PAR_NCAPR PRC_RESID PRC_CAPACT PAR_NCAPR PAR_CAPL VARACT F_IN F_OUT NCAP_ILED OB_ICOST PAR_COMBALEM CST_FIXC CST_ACTC CST_INVC VAR_CAP;
 * VAR_RCAP;
 
-
+RESID(REG,MILESTONYR,PRC) = PRC_RESID(REG,MILESTONYR,PRC);
 * perform interpolation
-$BATINCLUDE interpolate PRC_RESID 'REG' 'PRC' ",'0','0','0','0','0'" TC 'RTP(REG,TC,PRC)'
+*$BATINCLUDE interpolate PRC_RESID 'REG' 'PRC' ",'0','0','0','0','0'" TC 'RTP(REG,TC,PRC)'
+$BATINCLUDE interpolate RESID 'REG' 'PRC' ",'0','0','0','0','0'" TC 'RTP(REG,TC,PRC)'
 
 $BATINCLUDE interpolate PAR_CAPL 'REG' 'PRC' ",'0','0','0','0','0'" TC 'PAR_CAPL(REG,TC,PRC)'
 
@@ -59,6 +60,8 @@ $BATINCLUDE interpolate OBICOST 'REG' 'PRC' ",'0','0','0','0','0'" TC 'RTP(REG,T
  TVFLOWIN(COM,TC,PRC) = SUM((V,S), F_IN('REGION1',V,TC,PRC,COM,S));
 $BATINCLUDE interpolate TVFLOWIN 'COM' 'PRC' ",'0','0','0','0','0'" TC 'TVFLOWIN(COM,TC,PRC)'
 
+ TVFLOWOUT(COM,TC,PRC) = SUM((V,S), F_OUT('REGION1',V,TC,PRC,COM,S));
+$BATINCLUDE interpolate TVFLOWOUT 'COM' 'PRC' ",'0','0','0','0','0'" TC 'TVFLOWOUT(COM,TC,PRC)'
 
  TCST_INVC(REG,TC,PRC)= sum(V,CST_INVC(REG,V,TC,PRC,'INV'));
 $BATINCLUDE interpolate TCST_INVC 'REG' 'PRC' ",'0','0','0','0','0'" TC 'TCST_INVC(REG,TC,PRC)'
@@ -97,7 +100,9 @@ $BATINCLUDE interpolate T_COMBALEM 'REG' 'COM' ",'0','0','0','0','0'" TC 'T_COMB
   );
 
 
- TVCAP(TC,PRC)     = PRC_RESID('REGION1',TC,PRC)+PAR_CAPL('REGION1',TC,PRC);
+* TVCAP(TC,PRC)     = PRC_RESID('REGION1',TC,PRC)+PAR_CAPL('REGION1',TC,PRC);
+ TVCAP(TC,PRC)     = RESID('REGION1',TC,PRC)+PAR_CAPL('REGION1',TC,PRC);
+
  TVACT(TC,PRC)     = VARACT('REGION1',TC,PRC);
 * TVCAP(TC,PRC)     = PAR_CAPL('REGION1',TC,PRC);
 
@@ -110,19 +115,24 @@ $offtext
 
 * Calculate final consumption for SATIM industry sectors and freight
  FLOW_IN_FS(FS,COM,TC) = SUM(PRC$MPRCFS(PRC,FS), TVFLOWIN(COM,TC,PRC));
+ FLOW_OUT_FS(FS,COM,TC) = SUM(PRC$MPRCFS(PRC,FS), TVFLOWOUT(COM,TC,PRC));
+
 * calculate final consumption
  FLOW_IN_FSFuels(FS,C,TC,TT) = SUM(COM$MCOMC(COM,C),FLOW_IN_FS(FS,COM,TC));
+ FLOW_OUT_FSFuels(FS,C,TC,TT) = SUM(COM$MCOMC(COM,C),FLOW_OUT_FS(FS,COM,TC));
+
+*bm methane rich gas is currently a product of sasol which is accounted for in SATIM, but not in eSAGE so making this zero
+ FLOW_OUT_FSFuels('petr','cngas',TC,TT) = 0;
+
 *UCONV_C_T2C(C);
 
+*bm calc oil flow
+ OIL_FLOW(RUN,TC) = SUM(PRC$MPRCFS(PRC,'petr'), TVACT(TC,PRC));
+
 *bm not sure why yet but model goes unstable the second time round - need to look into it
-IF(TT1(TT),
+*IF(TT1(TT),
  EIntensity_FS(FS,C,T)$SFORE_X(FS,T) = FLOW_IN_FSFuels(FS,C,T,TT)/SFORE_X(FS,T);
- EIntensity_FS(FS,'cpetr_t',T)$SFORE_X('tran',T) = FLOW_IN_FSFuels('tran','cpetr_t',T,TT)/SFORE_X('tran',T);
-);
-
- ICAFSGR(C,FS,T,TT)$EIntensity_FS(FS,C,T-1) = EIntensity_FS(FS,C,T)/EIntensity_FS(FS,C,T-1);
-
-
+*);
 
 
 * For households excluding private transport fuel expenditure
@@ -145,35 +155,24 @@ IF(TT1(TT),
 *!!! need to sort out public transport!!!
  EIntensity_FH(FH,C,TC)$TFHPOP_X(FH,TC) = FLOW_IN_FHAllFuels(FH,C,TC)/TFHPOP_X(FH,TC);
 
-IF(TT1(TT),
+*IF(TT1(TT),
 
  FLOW_IN_FHFuelsGR(FH,C,TC)$EIntensity_FH(FH,C,TC-1) = EIntensity_FH(FH,C,TC)/EIntensity_FH(FH,C,TC-1);
-);
+*);
+ FLOW_IN_FHFuelsGR('hhd-he','cpetr_o','2013') = 0;
+ FLOW_IN_FHFuelsGR('hhd-he','cpetr_o','2014') = 0;
+ FLOW_IN_FHFuelsGR('hhd-he','cpetr_o','2015') = 0;
 
 
  gammamgr(C,H,TC,TT) = SUM(FH$MFHHT(FH,H,TC),FLOW_IN_FHFuelsGR(FH,C,TC));
+
+*bm Making a correction: the base year value in SATIM is very small, and jumps up a little bit for a strange reason.
+*bm given the much larger base year value in eSAGE this causes a huge swing causing huge amounts of imports
 
 
 
 *b
  ENCAP(SUPELE,XC,TC,TT) = TVNCAP(TC,SUPELE);
-
-
-*Use EFLOW shares to split production (remove imports from EFLOW so that only domestic production is scaled)
- EFLOW('NAT',XC,TC,TT) = SUM(RDNT, EFLOW(RDNT,XC,TC,TT));
- PFLOW('NAT',XC,TC,TT) = SUM(RDNT, PFLOW(RDNT,XC,TC,TT));
-
-
- ECAP('NAT',XC,TC,TT) = SUM(RDNT, ECAP(RDNT,XC,TC,TT));
-*bm+fh 201118: including investment and capital for refineries
- PCAP('NAT',XC,TC,TT) = SUM(RDNT, PCAP(RDNT,XC,TC,TT));
-
-
-*Electricity and petroleum build plan projection
- ECAPGR('nat',XC,TC,TT)$ECAP('nat',XC,TC-1,TT) = ECAP('nat',XC,TC,TT)/ECAP('nat',XC,TC-1,TT)-1;
-*bm+fh 201118: including investment and capital for refineries
- PCAPGR('nat',XC,TC,TT)$PCAP('nat',XC,TC-1,TT) = PCAP('nat',XC,TC,TT)/PCAP('nat',XC,TC-1,TT)-1;
-
 
 *Investment costs from TIMES ----------------------------------
 
@@ -217,8 +216,36 @@ LOOP((PRC,TC)$(TVNCAP(TC,PRC) AND NCAP_ILED('REGION1','2012',PRC) LT 0),
 
 * EFLOW('NAT',XC,TC,TT) = SUM(SUPELE, TVACT(TC,SUPELE))/3.6;
 * !!EFLOW now calculated from flow through transmission. When we include distributed generation we also need to include them in the calc
-ELC_FLOW(RUN,TC) = (TVACT(TC,'XAGRELC') + TVACT(TC,'XCOMELC') +TVACT(TC,'XINDELC') + TVACT(TC,'XRESELC') + TVACT(TC,'XTRAELC') + TVACT(TC,'XUPSELC'))/3.6;
-EFLOW('NAT',XC,TC,TT) = ELC_FLOW(RUN,TC);
+ELC_FLOW(RUN,TC) = (TVACT(TC,'XAGRELC') + TVACT(TC,'XCOMELC') +TVACT(TC,'XINDELC') + TVACT(TC,'XRESELC') + TVACT(TC,'XTRAELC') + TVACT(TC,'XUPSELC'));
+
+*debug test
+*ELC_FLOW(RUN,'2012') = 764.7;
+*ELC_FLOW(RUN,'2013') = 757.3;
+*ELC_FLOW(RUN,'2014') = 754.2;
+*ELC_FLOW(RUN,'2015') = 749.6;
+*ELC_FLOW(RUN,'2016') = 752.4;
+*ELC_FLOW(RUN,'2017') = 755.6;
+*ELC_FLOW(RUN,'2018') = 762.6;
+*ELC_FLOW(RUN,'2019') = 767.6;
+*ELC_FLOW(RUN,'2020') = 772.8;
+*ELC_FLOW(RUN,'2021') = 796.2;
+*ELC_FLOW(RUN,'2022') = 821.3;
+
+
+
+EIntensity_FS('elec',C,TC) = FLOW_IN_FSFuels('elec',C,TC,TT)/ELC_FLOW(RUN,TC);
+EIntensity_FS('hydr',C,TC)$FLOW_OUT_FSFuels('hydr','chydr',TC,TT) = FLOW_IN_FSFuels('hydr',C,TC,TT)/FLOW_OUT_FSFuels('hydr','chydr',TC,TT);
+
+
+* ICAFSGR(C,FS,T,TT)$EIntensity_FS(FS,C,T-1) = EIntensity_FS(FS,C,T)/EIntensity_FS(FS,C,T-1);
+*BM+FH 201218: SETTING STARTING POINT FOR HYDROGEN
+ ICAFSGR(C,FS,T,TT)$(EIntensity_FS(FS,C,T-1) GT 0.00001) = EIntensity_FS(FS,C,T)/EIntensity_FS(FS,C,T-1);
+ ICAFSGR(C,'nf',T,TT) = min(1,ICAFSGR(C,'nf',T,TT));
+
+* ICAFSGR('cpetr_d','tranlp',T,TT) = 0.8;
+
+
+
 * need to fix SUPELE to accommodate batteries.
 *Also need to divide by sum of final demand rather than sum of generation to better accommodate storage and losses
 
@@ -239,7 +266,14 @@ EFLOW('NAT',XC,TC,TT) = ELC_FLOW(RUN,TC);
  TCST_ELE_I(RUN,TC) = SUM(SUPELE,TCST_INVC('REGION1',TC,SUPELE));
  TCST_ELE_A(RUN,TC) = SUM(SUPELE,TCST_ACTC('REGION1',TC,SUPELE));
  TCST_ELE_F(RUN,TC) = SUM(SUPELE,TCST_FIXC('REGION1',TC,SUPELE));
- TCST_ELE_X(RUN,TC) = SUM(XELC,TCST_INVC('REGION1',TC,XELC) + TCST_FIXC('REGION1',TC,XELC));
+ TCST_ELE_X(RUN,TC) = SUM(XELC,TCST_INVC('REGION1',TC,XELC)) + SUM(XELC,TCST_FIXC('REGION1',TC,XELC));
+
+ TCST_ELE_INV(RUN,TC) = TCST_ELE_I(RUN,TC) + SUM(XELC,TCST_INVC('REGION1',TC,XELC));
+ QFEGY_GR(RUN,TC)$TCST_ELE_INV(RUN,TC-1) = TCST_ELE_INV(RUN,TC)/TCST_ELE_INV(RUN,TC-1);
+
+ ECIntensity(RUN,TC) = TCST_ELE_INV(RUN,TC)/ELC_FLOW(RUN,TC);
+ IFA_FEGY_GR(RUN,TC)$ECIntensity(RUN,TC-1) = ECIntensity(RUN,TC)/ECIntensity(RUN,TC-1);
+
 *sum the components of elec costs calcs:
  TCST_ELE(RUN,TC) = TCST_ELE_I(RUN,TC) + TCST_ELE_A(RUN,TC)+TCST_ELE_F(RUN,TC) + TCST_ELE_X(RUN,TC);
 

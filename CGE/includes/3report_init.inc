@@ -82,6 +82,7 @@ $loaddc ARA FRA HRA ACTAGG FACAGG HHDAGG
 SET
  CO2AC / eCOAL, eCOIL, eNGAS, eELEC, ePETR, eAGR, eIND, eSRV, eHHD, eS-I, eGOV, eDSTK, eTOTAL  /
  CO2CTX /P-QQ, P-EC, P-CO2, D-COAL-QQ, D-COIL-QQ, D-NGAS-QQ, D-COAL-CO2, D-COIL-CO2, D-NGAS-CO2, D-TOTL-CO2, I-EC, I-ELEC-QQ, I-PETR-QQ, I-ELEC-CO2, I-PETR-CO2, I-TOTL-CO2, D+I-TOTL-CO2, REF-SEC-RAT /
+$ontext
  MCO2(CO2AC,AC) /
   eELEC.(CELEC)
   ePETR.(CPETR)
@@ -93,6 +94,7 @@ SET
   eGOV .(GOV)
   eDSTK.(DSTK)
  /
+$offtext
 ;
 
 PARAMETER
@@ -162,10 +164,10 @@ PARAMETER
  REPYRS(TRN) = 1;
 
 SETS
- energy(c)       energy commodities     / ccoal-dis, ccoal-low, ccoal-hgh, ccoil, cngas, cpetr, celec/
+ energy(c)       energy commodities     / ccoal-low, ccoal-hgh, ccoil, cngas, cpetr_p, cpetr_d, cpetr_o, celec/
  nonenergy(c)    non-energy commodities
  food(c)         food commodities        /cagri, cfish, cfood, cbevt/
- transport(c)    transport commodities   /CPTRP-L,CFTRP-L,CTRPS-L,CPTRP-O,CFTRP-O,CTRPS-O/
+ transport(c)    transport commodities   /cptrp-l ,cftrp-l ,cptrp-o ,cftrp-o ,ctrps/
  other(c)        all excluding food energy transport
  hh(hr)
 ;

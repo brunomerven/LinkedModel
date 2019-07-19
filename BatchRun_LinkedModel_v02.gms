@@ -7,21 +7,20 @@
 *1.Set directories*-------------------------------------------------------------
 $SETGLOBAL workingfolder C:\SATIMGE_02\
 $SETGLOBAL Rworkingfolder C:/SATIMGE_02/
-
-* TIMES GDX output folder (note when creating a new folder copy cplex.opt, RUNTIMES.cmd and RUNTIMES2.cmd, and all .BU files into new folder
-$SETGLOBAL TIMESfolder Gams_WrkTI-ANNUAL
-*$SETGLOBAL TIMESfolder Gams_WrkTI-5Y
-
-$SETGLOBAL MCSIMworkbook MCSim.xlsm
-
+* TIMES GDX output folder
+$SETGLOBAL TIMESfolder Gams_WrkTI-TRA3
+*$SETGLOBAL TIMESfolder Gams_WrkTI-PAMS
+*$SETGLOBAL TIMESfolder Gams_WrkTI-IFPRI
 $SETGLOBAL gdxfolder %workingfolder%SATM\%TIMESfolder%\Gamssave\
 * Subset of TIMES GDX output folder
 $SETGLOBAL GDXoutfolder %workingfolder%GDXout\
 $SETGLOBAL GDXoutfolder2 %workingfolder%GDXCGEout\
 
-*Note reference run must have the same milestone years as runs used in batch. The current thinking is to put 5Y and ANNUAL runs in different Gams_WrkTI folders and keep reference run
-$SETGLOBAL referencerun REF
-
+*Annual runs:
+*$SETGLOBAL referencerun REF-BU-CS-A
+*the older one: REFU-BU2_CS_A
+*5year run:
+$SETGLOBAL referencerun T3EV_BU
 
 *$SETGLOBAL referencerun PAMS_BFUEL
 $SETGLOBAL outputworkbook outputworkbook_v08.xlsx
@@ -79,7 +78,10 @@ SETS
   ERSOLT(PRC)                    TIMES CSP techs
   ERW(PRC)                       TIMES Wind Plants
   ERB(PRC)                       TIMES Biomass Plants
-  FS                             TIMES economic sectors
+  FSATIM                  sector groupings in SATIM model
+  FS(FSATIM)              TIMES economic sectors
+  FH(FSATIM)              household groupings in SATIM model
+  FT(FSATIM)              passenger transport groupings in SATIM
 
 * Emissions sets
   CO2SET(COM)                    Sectoral emissions
@@ -151,6 +153,8 @@ PARAMETERS
   VARACT(REG,AY,PRC)             Activity level [PJ except for demand techs where unit will be aligned to particular demand e.g. VKM for road vehicles]
   PRC_CAPACT(REG,PRC)            Factor going from capacity to activity
   PRC_RESID(REG,AY,PRC)          Existing Capacity
+  RESID(REG,AY,PRC)              Existing Capacity milestone years
+
   PAR_CAPL(REG,AY,PRC)           Capacity excluding existing capacity
   PAR_VCAPL(REG,AY,PRC)          Variable VAR_CAPL results as parameter
   PAR_RCAPL(REG,AY,PRC)          Early retirement of capacity results
@@ -386,9 +390,9 @@ Alias (MILESTONYR,MY), (P,PP); ;
 *-------------------------------------------------------------------------------
 
 *5 Import MC parameters and data from spreadsheet-------------------------------
-$call   "gdxxrw i=MCSim.xlsm o=mcsim index=index!a6 checkdate"
+$call   "gdxxrw i=MCSimTra3.xlsm o=mcsim index=index!a6 checkdate"
 $gdxin  mcsim.gdx
-$loaddc RUN FUELP FUELPO FUELPC FUELPCPWR FUELPCPWR_CB FUELPCPWR_A FUELPG TECHS TECHN TECHC TECHP ETC ETCA ETG ETGIH ETN ERH ERSOLP ERSOLPC ERSOLPR ERSOLT ERW ERB CO2SET FS FuelPrices UXLE_AB TIMESCASE INCLRUN
+$loaddc RUN FUELP FUELPO FUELPC FUELPCPWR FUELPCPWR_CB FUELPCPWR_A FUELPG TECHS TECHN TECHC TECHP ETC ETCA ETG ETGIH ETN ERH ERSOLP ERSOLPC ERSOLPR ERSOLT ERW ERB CO2SET FSATIM FS FuelPrices UXLE_AB TIMESCASE INCLRUN
 $load MRUNCASE PamsSector GDP_FS_L SIM_POP SIM_GDP_Y SIM_COM_S SIM_GCOAL SIM_GGAS SIM_GOIL OCRFAC COAL_CV SIM_CLE1 SIM_CLE2 SIM_CLN SIM_CLE_A SIM_CLN_A SIM_CLNU_A SIM_GIH PV_CRATIO SIM_PV_MODULE SIM_PV_BOS CSP_CRATIO
 $load SIM_CSP SIM_NUCLEAR SIM_NUCLEARCF SIM_NUCLEARLT SIM_HYDIMP SIM_SOLTPKNT SIM_TRAMOD SIM_CO2CUMUL SIM_CGE SIM_CO2PRICE SIM_PAMS
 *-------------------------------------------------------------------------------
@@ -592,12 +596,11 @@ if(SIM_CGE(RUN) eq 1,
 $batinclude cge\includes\2simulation_loop.inc
 $batinclude cge\includes\3report_loop.inc
 *TC uncommentted
-ERPRICE(TC,RUN) = EPRICE(TC,'2050');
+*ERPRICE(TC,RUN) = EPRICE(TC,'2050');
 GDP_SIMPLE(FS,TC,RUN) = SFORE(FS,'base',TC);
 
 *FH: include electricity price and investment profile *TC
 $batinclude cge\includes\SATIMViz_loop.inc
-;
 
 ELSE
 
@@ -695,9 +698,8 @@ LOOP(RUN$INCLRUN(RUN),
 );
 *-------------------------------------------------------------------------------
 
-*$ontext
-*13 CGE Results dump - compact results----------------------------------------------
 $ontext
+*13 CGE Results dump - compact results----------------------------------------------
 PARAMETER XLTEST;
 execute_unload "Results_CGE.gdx" Calc
 execute 'xlstalk.exe -m Results_CGE.xlsx';

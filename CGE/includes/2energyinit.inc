@@ -12,10 +12,6 @@ SATIMODE = 1;
 SETS
 *Forecasting sets
  TIEPG(TC)               Years for which an electricity price forecast exists
- FSATIM                  sector groupings in SATIM model
- FH(FSATIM)              household groupings in SATIM model
- FT(FSATIM)              passenger transport groupings in SATIM
-* FS(FSATIM)              sector groupings in SATIM model
  FSXEP(FS)               sector groupings in SATIM excluding power
  CXEP(C)                 commodities that get include3d in the ica adjustment
  EU                      end uses
@@ -23,7 +19,7 @@ SETS
  MFHH(FH,H)              mapping SAGE and SATIM households
  MFHFH(FH,FH)            mapping between household with and without electricity
  MFSA(FS,A)              mapping SAGE and SATIM sectors
- MPRCARD(PRC,A,RD)       mapping SATIM PRCs to SAGE activities with RD detail
+ MPRCATYPE(PRC,A,TECHTYPE)       mapping SATIM PRCs to SAGE activities with Energy Tech Type detail
  MPRCA(PRC,A)            mapping SATIM PRCs to SAGE activities
  MPRCFS(PRC,FS)          mapping SATIM PRCs to SATIM sectors (temporarily until sectors are reaggregated in the same way in both models)
  MPRCFH(PRC,FH)          mapping SATIM PRCs to SATIM household income groups
@@ -87,7 +83,7 @@ $call    "gdxxrw i=.\links\0forecast.xlsx o=forecast index=index!a6"
 $gdxin   forecast.gdx
 
 
-$load TIEPG FSATIM FH FT XELC COALSUP
+$load TIEPG FH FT XELC COALSUP
 
 
 * set sectors that are linked with the main ica calc approach
@@ -118,7 +114,7 @@ CXEP(C) = Yes;
 
 *b ;
 
-$load MFHH MFSA MPRCARD MPRCA MPRCCOM MPRCFS MPRCFH MPRCFT mCOMC MINCLPWR MINCLDUAL MINCLDUAL_A SUPGIC
+$load MFHH MFSA MPRCATYPE MPRCA MPRCCOM MPRCFS MPRCFH MPRCFT mCOMC MINCLPWR MINCLDUAL MINCLDUAL_A SUPGIC
 
 
 PARAMETER
@@ -135,7 +131,7 @@ PARAMETER
  PFORE(FH,X,AY)           loaded: household population forecast for SATIM
  IFORE(AY,AC)             loaded: initial electricity demand forecast
  IEPGFORE(AY,AC)          loaded: initial electricity price growth forecast
- BFORE(AY,RD)             loaded: historical electricity build
+ BFORE(AY,TECHTYPE)             loaded: historical electricity build
 *Residential
  FHMMB(FH,*,AY)
 
@@ -186,14 +182,23 @@ PARAMETER
  TCST_INVC(REG,AY,PRC) TIMES calculated annual investment costs
  TCST_ACTC(REG,AY,PRC) TIMES calculated annual activity costs
  TCST_FIXC(REG,AY,PRC) TIMES calculated annual fixed costs
- TCST_ELE_I(RUN,AY) ELC total inv costs
- TCST_ELE_A(RUN,AY) ELC total act costs
- TCST_ELE_F(RUN,AY) ELC total F costs
- TCST_ELE_X(RUN,AY) ELC total TDX costs
+ TCST_ELE_I(RUN,AY) ELC total inv costs (Gx)
+ TCST_ELE_A(RUN,AY) ELC total act costs (Gx)
+ TCST_ELE_F(RUN,AY) ELC total F costs   (Gx)
+ TCST_ELE_X(RUN,AY) ELC total TDX costs (Tx + Dx)
+ TCST_ELE_INV(RUN,AY) Elc total inv cost (Gx + Tx + Dx)
+ ECIntensity(RUN,AY) Electricity Capital Intensity
+ IFA_FEGY_GR(RUN,AY) Growth in capital intensity (Electricity)
+ QFEGY_GR(RUN,AY) Growth in capital supply (Electricity)
 
  TCST_COALSUP(RUN,AY) Total costs from detailed coal supply model
 
  ELC_FLOW(RUN,AY) Electricity flows used as denominator in elc price calculation
+ OIL_FLOW(RUN,AY) Oil product flows used as denominator in ica calc for petroleum
+
+ ELC_IMP(RUN,AY) Electricity Imports
+ OIL_IMP(RUN,AY) Oil product imports
+
 * CO2 in power sector
 TPWRCLE(AY) TIMES calculated annual coal use in power sector (PJ)
 TPWRCLETAX(AY) TIMES calculated CO2 tax
@@ -204,6 +209,7 @@ TPWRCLETAX(AY) TIMES calculated CO2 tax
  TVCAP(AY,PRC)    Total Capacity
  TVACT(AY,PRC)    Activity (output)
  TVFLOWIN(COM,AY,PRC) flow in (input)
+ TVFLOWOUT(COM,AY,PRC) flow out (output)
 
  UCONV_C_T2C(C)            Unit conversion from TIMES-SATIM (PJ) to ESAGE (e.g. TWh)
  UCONV_A_T2C(A)            Unit conversion from TIMES-SATIM (PG) to ESAGE (e.g. tons)
@@ -242,21 +248,29 @@ TPWRCLETAX(AY) TIMES calculated CO2 tax
  EPROJGR(A,AY)      Electricity demand projection growth used for extrapolation
  EELAS           / 0.6 /
 *Supply and investment data (results from TIMES)
- TFLOW(A,RD,RUN,AY,TT) Raw energy supply results from TIMES (production aggregated to SAM activities)
+ TFLOW(A,TECHTYPE,RUN,AY,TT) Raw energy supply results from TIMES (production aggregated to SAM activities)
 
- EFLOW(RD,X,AY,TT)   Electricity supply vector for production (results from TIMES)
- PFLOW(RD,X,AY,TT)   Petroleum (fuels) supply vector for production (results from TIMES)
+ EFLOW(TECHTYPE,X,AY,TT)   Electricity supply vector for production (results from TIMES)
+ PFLOW(TECHTYPE,X,AY,TT)   Petroleum (fuels) supply vector for production (results from TIMES)
 
- TCAP(A,RD,RUN,AY,TT) Raw energy supply results from TIMES (Capacity aggregated to SAM activities)
- ECAP(RD,X,AY,TT)    Electricity supply vector for capacity (results from TIMES)
+ TCAP(A,RUN,AY,TT) Raw energy supply results from TIMES (Capacity aggregated to SAM activities)
+ ECAP(X,AY,TT)    Electricity supply vector for capacity (results from TIMES)
  ENCAP(PRC,X,AY,TT)  Electricity supply vector for new capacity
- PCAP(RD,X,AY,TT)    Petroleum (fuels) supply vector for capacity (results from TIMES)
+ PCAP(X,AY,TT)    Petroleum (fuels) supply vector for capacity (results from TIMES)
+*BM+FH 201218: SETTING STARTING POINT FOR HYDROGEN
+ HCAP(X,AY,TT)       Hydrogen (fuels) supply vector for capacity (results from TIMES)
+ CCAP(AY,TT)       Coal supply vector for capacity (results from TIMES)
+
+
 
  FLOW_IN_A(A,COM,AY) Consumption of SATIM commodity COM for CGE activity A
  FLOW_IN_AFuels(A,C,AY,TT) Consumption of CGE commodity C for CGE activity A
 
  FLOW_IN_FS(FS,COM,AY) Consumption of SATIM commodity COM for SATIM sector FS
  FLOW_IN_FSFuels(FS,C,AY,TT) Consumption of CGE commodity C for SATIM sector FS
+
+ FLOW_OUT_FS(FS,COM,AY) Production of SATIM commodity COM for SATIM sector FS
+ FLOW_OUT_FSFuels(FS,C,AY,TT) Production of CGE commodity C for SATIM sector FS
 
  FLOW_IN_FH(FH,COM,AY) Consumption of SATIM commodity COM for household sector FH
  FLOW_IN_FHFuels(FH,C,AY) Consumption of CGE commodity C for household sector FH
@@ -335,21 +349,25 @@ $load UCONV_C_T2C UCONV_A_T2C
 *---------------------------------------------------
 
 *Initialize values of linking variables
- EAFXCAP(RD,XC,TC,TT) = EPS;
+ EAFXCAP(XC,TC,TT) = EPS;
 * EFLOW('IMP',XC,TC,TT) = QM0('CELEC','REST');
 * PFLOW('IMP',XC,TC,TT) = QM0('CPETR','REST');
 
  ETPRICE(TC) = PQ0('CELEC');
- EFLOW('IMP',XC,TC,TT) = QM0('CELEC','REST');
- PFLOW('IMP',XC,TC,TT) = QM0('CPETR','REST');
+
+*fh: TEMP EXCLUSION 1702
+* PFLOW('IMP',XC,TC,TT) = QM0('CPETR','REST');
 * AFLOW_INFuels('APETR','CCOIL',TC,TT) = QINT0('CCOIL','APETR');
  EPRICE(TC,TT)=PQ0('CELEC');
  EINVCOST(X,TC,TT) = 0;
  INVCOST(RUN,TC,TT,PRC) = 0;
  BPINV(X,TC,TCP,PRC) = 0;
 
- ECAP(RD,X,TC,TT) = 0;
- PCAP(RD,X,TC,TT) = 0;
+ ECAP(X,TC,TT) = 0;
+ PCAP(X,TC,TT) = 0;
+*BM+FH 201218: SETTING STARTING POINT FOR HYDROGEN
+ HCAP(X,TC,TT) = 0;
+
 
  ICAGR(C,A,TC) = 0;
  gammamgr(C,H,TC,TT) = 0;
@@ -357,10 +375,10 @@ $load UCONV_C_T2C UCONV_A_T2C
 
 
 * define subsets used by both models
-SUPELE(PRC)$sum(RD,MPRCARD(PRC,'aelec',RD)) = YES;
-SUPOIL(PRC)$sum(RD,MPRCARD(PRC,'apetr',RD)) = YES;
-SUPCLE(PRC)$sum(RD,MPRCARD(PRC,'acoal',RD)) = YES;
-SUPGAS(PRC)$sum(RD,MPRCARD(PRC,'angas',RD)) = YES;
+SUPELE(PRC)$sum(TECHTYPE,MPRCATYPE(PRC,'aelec',TECHTYPE)) = YES;
+SUPOIL(PRC)$sum(TECHTYPE,MPRCATYPE(PRC,'apetr',TECHTYPE)) = YES;
+SUPCLE(PRC)$sum(TECHTYPE,MPRCATYPE(PRC,'acoal',TECHTYPE)) = YES;
+SUPGAS(PRC)$sum(TECHTYPE,MPRCATYPE(PRC,'angas',TECHTYPE)) = YES;
 
 XPWR(PRC)$sum(COM,MPRCCOM(PRC,COM)) = YES;
 PWR(COM)$sum(PRC,MPRCCOM(PRC,COM)) = YES;

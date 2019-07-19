@@ -1,0 +1,202 @@
+SET ALL_REG /
+  'REGION1'
+/;
+SET REG /
+  'REGION1'                  'South Africa                                      '
+/;
+SET COM_GRP /
+  'EHBIB-NRGI'               'EHBIB-NRGI                                        '
+  'EHBIB-NRGO'               'EHBIB-NRGO                                        '
+  'EHBIG-NRGI'               'EHBIG-NRGI                                        '
+  'EHBIG-NRGO'               'EHBIG-NRGO                                        '
+  'EHBIW-NRGI'               'EHBIW-NRGI                                        '
+  'EHBIW-NRGO'               'EHBIW-NRGO                                        '
+  'EHCLE-NRGI'               'EHCLE-NRGI                                        '
+  'PWRENV'                   'Power Sector - Environmental Levy                 '
+  'PWREPE'                   'Power Sector Power Sector - PS Dummy Commodity - E'
+  'PWREPN'                   'Power Sector Power Sector - PS Dummy Commodity - N'
+/;
+SET COM /
+  'PWRENV'                   'Power Sector - Environmental Levy                 '
+  'PWREPE'                   'Power Sector Power Sector - PS Dummy Commodity - E'
+  'PWREPN'                   'Power Sector Power Sector - PS Dummy Commodity - N'
+/;
+SET COM_NRG /
+  'REGION1'   .'PWREPE'
+  'REGION1'   .'PWREPN'
+/;
+SET COM_ENV /
+  'REGION1'   .'PWRENV'
+/;
+SET COM_ANNUAL /
+  'REGION1'   .'PWRENV'
+/;
+SET COM_DAYNIT /
+  'REGION1'   .'PWREPE'
+  'REGION1'   .'PWREPN'
+/;
+SET COM_NRGELC /
+  'REGION1'   .'PWREPE'
+  'REGION1'   .'PWREPN'
+/;
+SET COM_ENVGHG /
+  'REGION1'   .'PWRENV'
+/;
+SET PRC /
+  'ETCLDFB-N'                'Fluidised Bed Combustion Coal                     '
+  'ETCLEARNO-E'              'ARNOT                                             '
+  'ETCLECAMD-E'              'CAMDEN                                            '
+  'ETCLEDUVH-E'              'DUVHA                                             '
+  'ETCLEGROO-E'              'GROOTVLEI                                         '
+  'ETCLEHEND-E'              'HENDRINA                                          '
+  'ETCLEKELA-E'              'KELVIN A                                          '
+  'ETCLEKELB-E'              'KELVIN B                                          '
+  'ETCLEKEND-E'              'KENDAL                                            '
+  'ETCLEKOMA-E'              'KOMATI                                            '
+  'ETCLEKRIE-E'              'KRIEL                                             '
+  'ETCLELETH-E'              'LETHABO                                           '
+  'ETCLEMAJD-E'              'MAJUBA DRY                                        '
+  'ETCLEMAJW-E'              'MAJUBA WET                                        '
+  'ETCLEMATI-E'              'MATIMBA                                           '
+  'ETCLEMATL-E'              'MATLA                                             '
+  'ETCLEMED-N-A'             'MEDUPI - no FGD                                   '
+  'ETCLEPFD-E-A'             'MATIMBA - Waterberg                               '
+  'ETCLEPRET-E'              'PRETORIA WEST                                     '
+  'ETCLEROOI-E'              'ROOIWAL                                           '
+  'ETCLESC-N'                'KUSILE - Central Basin                            '
+  'ETCLESC-N-A'              'New Coal Supercritical - Waterberg with FDG       '
+  'ETCLETUTU-E'              'TUTUKA                                            '
+/;
+SET PRC_ELE /
+  'REGION1'   .'ETCLDFB-N'
+  'REGION1'   .'ETCLEARNO-E'
+  'REGION1'   .'ETCLECAMD-E'
+  'REGION1'   .'ETCLEDUVH-E'
+  'REGION1'   .'ETCLEGROO-E'
+  'REGION1'   .'ETCLEHEND-E'
+  'REGION1'   .'ETCLEKELA-E'
+  'REGION1'   .'ETCLEKELB-E'
+  'REGION1'   .'ETCLEKEND-E'
+  'REGION1'   .'ETCLEKOMA-E'
+  'REGION1'   .'ETCLEKRIE-E'
+  'REGION1'   .'ETCLELETH-E'
+  'REGION1'   .'ETCLEMAJD-E'
+  'REGION1'   .'ETCLEMAJW-E'
+  'REGION1'   .'ETCLEMATI-E'
+  'REGION1'   .'ETCLEMATL-E'
+  'REGION1'   .'ETCLEMED-N-A'
+  'REGION1'   .'ETCLEPFD-E-A'
+  'REGION1'   .'ETCLEPRET-E'
+  'REGION1'   .'ETCLEROOI-E'
+  'REGION1'   .'ETCLESC-N'
+  'REGION1'   .'ETCLESC-N-A'
+  'REGION1'   .'ETCLETUTU-E'
+/;
+SET PRC_WEEKLY /
+  'REGION1'   .'ETCLDFB-N'
+  'REGION1'   .'ETCLEARNO-E'
+  'REGION1'   .'ETCLECAMD-E'
+  'REGION1'   .'ETCLEDUVH-E'
+  'REGION1'   .'ETCLEGROO-E'
+  'REGION1'   .'ETCLEHEND-E'
+  'REGION1'   .'ETCLEKELA-E'
+  'REGION1'   .'ETCLEKELB-E'
+  'REGION1'   .'ETCLEKEND-E'
+  'REGION1'   .'ETCLEKOMA-E'
+  'REGION1'   .'ETCLEKRIE-E'
+  'REGION1'   .'ETCLELETH-E'
+  'REGION1'   .'ETCLEMAJD-E'
+  'REGION1'   .'ETCLEMAJW-E'
+  'REGION1'   .'ETCLEMATI-E'
+  'REGION1'   .'ETCLEMATL-E'
+  'REGION1'   .'ETCLEMED-N-A'
+  'REGION1'   .'ETCLEPFD-E-A'
+  'REGION1'   .'ETCLEPRET-E'
+  'REGION1'   .'ETCLEROOI-E'
+  'REGION1'   .'ETCLESC-N'
+  'REGION1'   .'ETCLESC-N-A'
+  'REGION1'   .'ETCLETUTU-E'
+/;
+SET ACOM_UNIT /
+  'REGION1'.'PWRENV'.'PJ'
+  'REGION1'.'PWREPE'.'PJ'
+  'REGION1'.'PWREPN'.'PJ'
+/;
+SET PRCTACTUNT /
+  'REGION1'.'ETCLDFB-N'.'PJ'
+  'REGION1'.'ETCLEARNO-E'.'PJ'
+  'REGION1'.'ETCLECAMD-E'.'PJ'
+  'REGION1'.'ETCLEDUVH-E'.'PJ'
+  'REGION1'.'ETCLEGROO-E'.'PJ'
+  'REGION1'.'ETCLEHEND-E'.'PJ'
+  'REGION1'.'ETCLEKELA-E'.'PJ'
+  'REGION1'.'ETCLEKELB-E'.'PJ'
+  'REGION1'.'ETCLEKEND-E'.'PJ'
+  'REGION1'.'ETCLEKOMA-E'.'PJ'
+  'REGION1'.'ETCLEKRIE-E'.'PJ'
+  'REGION1'.'ETCLELETH-E'.'PJ'
+  'REGION1'.'ETCLEMAJD-E'.'PJ'
+  'REGION1'.'ETCLEMAJW-E'.'PJ'
+  'REGION1'.'ETCLEMATI-E'.'PJ'
+  'REGION1'.'ETCLEMATL-E'.'PJ'
+  'REGION1'.'ETCLEMED-N-A'.'PJ'
+  'REGION1'.'ETCLEPFD-E-A'.'PJ'
+  'REGION1'.'ETCLEPRET-E'.'PJ'
+  'REGION1'.'ETCLEROOI-E'.'PJ'
+  'REGION1'.'ETCLESC-N'.'PJ'
+  'REGION1'.'ETCLESC-N-A'.'PJ'
+  'REGION1'.'ETCLETUTU-E'.'PJ'
+/;
+PARAMETER ACOM_PEAK /
+  'REGION1'                 .'ELCC'                       1
+/;
+       TABLE ACOM_PKRSV
+                                                          0     2012            2013            2014            2015            2016            2017            2018            2019            2020            2021            2022            2023            2024            2025            2026            2027            2028            2029            2030            2031            2032            2033            2034            2035            2036            2037            2038            2039            2040            2045            2050            2060            2070            
+  'REGION1'                 .'ELCC'                             .15             .15             .15             .15             .15             .15             .15             .15             .15             .15             .15             .15             .15             .15             .15             .15             .15             .15             .15             .15             .15             .15             .15             .15             .15             .15             .15             .15             .15            EPS             EPS             EPS             EPS
+;
+       TABLE ANCAP_AFA
+                                                                                     0     2012            2013            2014            2015            2016            2017            2018            2019            2020            2021            2022            2023            2024            2025            2026            2027            2028            2029            2030            2031            2032            2033            2034            2035            2036            2037            2038            2039            2040            2045            2050            2060            2070            
+  'REGION1'                 .'ETCLDFB-N'               .'LO'                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+  'REGION1'                 .'ETCLDFB-N'               .'UP'                               .8                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+  'REGION1'                 .'ETCLEARNO-E'             .'LO'                              EPS                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+  'REGION1'                 .'ETCLEARNO-E'             .'UP'                               .7                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+  'REGION1'                 .'ETCLECAMD-E'             .'LO'                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+  'REGION1'                 .'ETCLECAMD-E'             .'UP'                               .7                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+  'REGION1'                 .'ETCLEDUVH-E'             .'LO'                              EPS                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+  'REGION1'                 .'ETCLEDUVH-E'             .'UP'                               .7                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+  'REGION1'                 .'ETCLEGROO-E'             .'LO'                              EPS                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+  'REGION1'                 .'ETCLEGROO-E'             .'UP'                               .7                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+  'REGION1'                 .'ETCLEHEND-E'             .'LO'                              EPS                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+  'REGION1'                 .'ETCLEHEND-E'             .'UP'                               .7                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+  'REGION1'                 .'ETCLEKELA-E'             .'LO'                              EPS                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+  'REGION1'                 .'ETCLEKELA-E'             .'UP'                               .7                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+  'REGION1'                 .'ETCLEKELB-E'             .'LO'                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+  'REGION1'                 .'ETCLEKELB-E'             .'UP'                               .7                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+  'REGION1'                 .'ETCLEKEND-E'             .'LO'                              EPS                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+  'REGION1'                 .'ETCLEKEND-E'             .'UP'                               .7                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+  'REGION1'                 .'ETCLEKOMA-E'             .'LO'                              EPS                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+  'REGION1'                 .'ETCLEKOMA-E'             .'UP'                               .7                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+  'REGION1'                 .'ETCLEKRIE-E'             .'LO'                              EPS                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+  'REGION1'                 .'ETCLEKRIE-E'             .'UP'                               .7                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+  'REGION1'                 .'ETCLELETH-E'             .'LO'                              EPS                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+  'REGION1'                 .'ETCLELETH-E'             .'UP'                               .7                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+  'REGION1'                 .'ETCLEMAJD-E'             .'LO'                              EPS                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+  'REGION1'                 .'ETCLEMAJD-E'             .'UP'                               .7                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+  'REGION1'                 .'ETCLEMAJW-E'             .'LO'                              EPS                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+  'REGION1'                 .'ETCLEMAJW-E'             .'UP'                               .7                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+  'REGION1'                 .'ETCLEMATI-E'             .'LO'                              EPS                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+  'REGION1'                 .'ETCLEMATI-E'             .'UP'                               .7                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+  'REGION1'                 .'ETCLEMATL-E'             .'LO'                              EPS                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+  'REGION1'                 .'ETCLEMATL-E'             .'UP'                               .7                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+  'REGION1'                 .'ETCLEMED-N-A'            .'UP'                               .8                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+  'REGION1'                 .'ETCLEPFD-E-A'            .'UP'                               .7                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+  'REGION1'                 .'ETCLEPRET-E'             .'LO'                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+  'REGION1'                 .'ETCLEPRET-E'             .'UP'                               .7                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+  'REGION1'                 .'ETCLEROOI-E'             .'LO'                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+  'REGION1'                 .'ETCLEROOI-E'             .'UP'                               .7                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+  'REGION1'                 .'ETCLESC-N'               .'LO'                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+  'REGION1'                 .'ETCLESC-N'               .'UP'                               .8                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+  'REGION1'                 .'ETCLESC-N-A'             .'UP'                               .8                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+  'REGION1'                 .'ETCLETUTU-E'             .'LO'                              EPS                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+  'REGION1'                 .'ETCLETUTU-E'             .'UP'                               .7                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+;

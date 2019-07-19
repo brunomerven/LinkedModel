@@ -52,8 +52,12 @@ SETS
                           aplas,        aglas,        anmet,        airon,        anfrm,
                           ametp,        amach,        aemch,        asequ,        avehi,
                           atequ,        afurn,        aoman,        acons,        atrps,
-                          altrp_p,      altrp_f,      altrp_s,      awtrp_p,
-                          awtrp_f,      awtrp_s,      aatrp_p,      aatrp_f,      aatrp_s /
+                          altrp-p,      altrp-f,      awtrp,        aatrp      /
+
+ TECHTYPE                SATIM->eSAGE Tech Types
+                         / ctl, gtl, oil, hyd, spv, sth, wnd, cds, clw, gas, nuc, die /
+
+
 ;
 
 PARAMETERS
@@ -85,7 +89,7 @@ PARAMETERS
  CLEANTECH(C,X,T)        carbon content adjustment factor
  EINVEST(X,T)            electricity sector build plan investment cost (billions of Rands)
  ECAPACITY(X,RD,T)       electricity sector capacity stream (relative to base year)
- PWGR(C,X,T)             world price ratios from Paltsev
+ PWGR(C,RUN,T)             world price ratios from Paltsev
 *
  XIMPHYD(X)              import hydro on-off
 
@@ -99,6 +103,10 @@ PARAMETERS
 *FH: IASS Shock
  PWE_COAL(C,RW,X,T)     baseline sensitivity for global coal demand
  rhova_coal(A,RD,X,T)       increase capital intensity of coal mining
+
+*fh 291118: SANEDI-EV shocks
+ deltaqev(c,rw,run,t)
+ deltatev(c,rw,run,t)
 ;
 
  CTA_EMRR(CTA)=0;
@@ -106,7 +114,10 @@ PARAMETERS
 $call    "gdxxrw i=cge\%basedata% o=basedata index=index!a6 checkdate"
 $gdxin   basedata.gdx
 $load    X T TDIR TIMESDIR
-$loaddc  XC TC TT TTN FL AFX CLOSURES CLEANTECH EINVEST ECAPACITY PWGR CARBONTAX RETALTAX
+$loaddc  XC TC TT TTN FL AFX CLOSURES PWGR CARBONTAX RETALTAX
+*CLEANTECH EINVEST ECAPACITY
+*fh 291118: SANEDI-EV shocks
+$loaddc deltaqev deltatev
 
 alias (TC,TCP), (TT, TTP);
 
@@ -139,6 +150,7 @@ alias (TC,TCP), (TT, TTP);
 *Fixed capital growth sectors
  ANFX(A,RD)$(NOT AFX(A,RD)) = YES;
 
+$ontext
  Set
  TD(TC)  /2021*2050/
 
@@ -147,7 +159,7 @@ alias (TC,TCP), (TT, TTP);
 
  TDUM(TC)=1;
  TDUM(TD)=0;
-
+$offtext
 *------------------------------------------------------------------------------
 *1. Excel inputted scenario calibration
 *------------------------------------------------------------------------------
@@ -170,7 +182,8 @@ $include cge\includes\2projection.inc
 *        Gas  = tons CO2 per kiloliter gas
 
 SETS
- CEGY(C)                 energy commodities   / ccoal, ccoal-dis, ccoal-low, ccoal-hgh, ccoil, cngas, celec, cpetr /
+ CEGY(C)                 energy commodities   / ccoal-low, ccoal-hgh, ccoil, cngas, celec, cpetr_p, cpetr_d, cpetr_o /
+*ccoal, ccoal-dis,
 ;
 
 PARAMETER
@@ -187,13 +200,13 @@ PARAMETER
  ISHR(A,RD)              share of new capital in each activity
  ICAX(C,A,RD,X,T,TT)     tracking input output coefficients
 *Used by fixed energy supply mixes based on TIMES results
- ECAPGR(RD,X,T,TT)       growth in electricity sector capacity (ECAP) levels by energy source
- PCAPGR(RD,X,T,TT)       electricity sector capacity levels by energy source
+ ECAPGR(X,T,TT)       growth in electricity sector capacity (ECAP) levels by energy source
+ PCAPGR(X,T,TT)       electricity sector capacity levels by energy source
 *Energy sector investment costs
  IADJSESIM(X,T)          total electricity investment cost growth
- EAFXCAP(RD,X,T,TT)      electricity capital from TIMES in units inconsistent with CGE
+ EAFXCAP(X,T,TT)      electricity capital from TIMES in units inconsistent with CGE
 *bm+fh 201118
- PAFXCAP(RD,X,T,TT)      refinery capital from TIMES in units inconsistent with CGE
+ PAFXCAP(X,T,TT)      refinery capital from TIMES in units inconsistent with CGE
 ;
 
 *Carbon tax ------
@@ -214,10 +227,11 @@ PARAMETER
 
 *Cleaner coal ------
 * Technology introduced over time (needs to matched to build plan)
- CLEANTECH(C,XC,TC)$(NOT CLEANTECH(C,XC,TC)) = 1;
- CO2CSIM(C,XC,TC)    = co2c0(C)    * CLEANTECH(C,XC,TC);
- CO2ESIM(C,RW,XC,TC) = co2e0(C,RW) * CLEANTECH(C,XC,TC);
- CO2MSIM(C,RW,XC,TC) = co2m0(C,RW) * CLEANTECH(C,XC,TC);
+*fh 022019
+* CLEANTECH(C,XC,TC)$(NOT CLEANTECH(C,XC,TC)) = 1;
+* CO2CSIM(C,XC,TC)    = co2c0(C)    * CLEANTECH(C,XC,TC);
+* CO2ESIM(C,RW,XC,TC) = co2e0(C,RW) * CLEANTECH(C,XC,TC);
+* CO2MSIM(C,RW,XC,TC) = co2m0(C,RW) * CLEANTECH(C,XC,TC);
 
 *Energy intensity elasticities ------
 * Intermediates
@@ -228,8 +242,8 @@ PARAMETER
 
 *Electricity sector -----
 * Exogenous capacity from IRP2
- ECAPGR(RD,XC,TC,TT) = 0.00;
- PCAPGR(RD,XC,TC,TT) = 0.00;
+ ECAPGR(XC,TC,TT) = 0.00;
+ PCAPGR(XC,TC,TT) = 0.00;
 * ECAPGR(RD,XC,TC)$ECAPACITY(XC,RD,TC-1) = ECAPACITY(XC,RD,TC)/ECAPACITY(XC,RD,TC-1)-1;
 
 * ECAPGR(RD,'REVISED',TC) = ECAPGR(RD,'BASE',TC);
@@ -271,6 +285,9 @@ PARAMETER
 *No value-added tax adjustment on electricity sectors
  tva01(A,RD)       = YES;
  tva01('AELEC',RD) = NO;
+*fh 71218
+ tva01('APETR',RD) = NO;
+
 *No direct tax adjustment on electricity sectors
  trn01(INSDNG)  = YES;
  trn01('ENT-N') = NO;

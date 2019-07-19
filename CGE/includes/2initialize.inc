@@ -115,6 +115,11 @@ PARAMETER
   CTA_EMX(A,RUN,X,T,TT)
   CTA_EMRX(A,RUN,X,T,TT)
   CTA_EMRRX(A,RUN,X,T,TT)
+
+*fh: EV shock
+ deltaqx(c,rw,run,x,t,tt)
+ deltatx(c,rw,run,x,t,tt)
+
 ;
 
  QFS00(F) = QFS0(F);

@@ -1,5 +1,8 @@
 
 
+
+
+
 *For capital that is not entirely fixed
  CAPSHR1TOT              = SUM((FCAP,A,RD)$ANFX(A,RD), QF.L(FCAP,A,RD));
  CAPSHR1(FCAP)           = SUM((RD,A)$ANFX(A,RD), QF.L(FCAP,A,RD))/CAPSHR1TOT;
@@ -57,6 +60,7 @@ IF (KOPTION EQ 2,
 
 *CA Alter to handle complementarity condition on capital (minimum wfdist)
  QF.L('FEGY','AELEC','NAT')$(QF.L('FEGY','AELEC','NAT') LT QFS.UP('FEGY')) = QFS.UP('FEGY');
+* QF.L('FSAS','APETR','NAT')$(QF.L('FSAS','APETR','NAT') LT QFS.UP('FSAS')) = QFS.UP('FSAS');
 
  RKAP(FCAP,A,RD)$(ANFX(A,RD) AND QF0(FCAP,A,RD)) = DKAP(FCAP,A,RD)/QF.L(FCAP,A,RD) - natdrate;
 
@@ -65,6 +69,11 @@ IF (KOPTION EQ 2,
 
 *Apply annual growth rates over gaps
  QF.L(FCAP,A,RD)$QF0(FCAP,A,RD) = QF.L(FCAP,A,RD)*(1 + RKAP(FCAP,A,RD));
+
+*bm turning off domestic crude when existing GTL plant shuts down
+* QF.L(F,'ACOIL','NAT')$(NOT TVACT(TC,'UGTLGICCO-E')) = QF.L(F,'ACOIL','NAT')*0.5;
+* QA.L('ACOIL')$(NOT TVACT(TC,'UGTLGICCO-E')) = QA.L('ACOIL')*0.5;
+* QINT.L(C,'ACOIL')$(NOT TVACT(TC,'UGTLGICCO-E')) = QINT.L(C,'ACOIL')*0.5;
 
  QFBAR('FCAP',A,RD)$QF0('FCAP',A,RD) = QF.L('FCAP',A,RD);
 

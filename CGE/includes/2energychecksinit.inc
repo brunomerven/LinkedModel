@@ -1,10 +1,15 @@
 sets
   MOD models /SATIM, eSAGE/
+  QType quantitity types /qq, qd, qint, qe, qm, qh, qx, qxac/
+  IN_OUT flow direction /IN, OUT/
+
 ;
 
 parameters
-  FinalDemand(MOD,FS,C,TC,X) Final Energy Demand for SATIM sectors in SATIM and eSAGE models
+ BalanceCheck(QType,C,TC,RUN) balance check
 
-  EIntensity(MOD,FS,C,TC,X) Energy Intensity in SATIM and ESAGE models
+ EBCHECK(MOD,FSATIM,IN_OUT,C,TC,TT,RUN) Final Energy Demand for SATIM sectors in SATIM and eSAGE models
+
+ EIntensity(MOD,FSATIM,C,TC,TT,RUN) Energy Intensity in SATIM and ESAGE models
 
 ;

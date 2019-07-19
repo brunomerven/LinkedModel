@@ -99,6 +99,52 @@
  CMRES('CELEC')= YES;
  QM.FX('CELEC','REST') = QM0('CELEC','REST') ;
 
+*bm+fh_20190207
+* CMFIX('CPETR_T')=YES;
+* CMRES('CPETR_T')= YES;
+* QM.FX('CPETR_T','REST') = QM0('CPETR_T','REST') ;
+ CEFIX('ccoal-hgh')=YES;
+ CERES('ccoal-hgh')=YES;
+ QE.FX('ccoal-hgh','REST') = QE0('ccoal-hgh','REST') ;
+
+
+ CEFIX('cftrp-o')=YES;
+ CERES('cftrp-o')=YES;
+ QE.FX('cftrp-o','REST') = QE0('cftrp-o','REST') ;
+
+ CEFIX('cptrp-o')=YES;
+ CERES('cptrp-o')=YES;
+ QE.FX('cptrp-o','REST') = QE0('cptrp-o','REST') ;
+
+
+* CERES('ccoal-low')=YES;
+
+
+
+ CERES('chydr')=YES;
+
+
+* CMRES('cpetr_p')= YES;
+* CMRES('cpetr_d')= YES;
+* CMRES('cpetr_o')= YES;
+
+* CEFIX('cpetr_p')=YES;
+ CERES('cpetr_p')=YES;
+* QE.FX('cpetr_p','REST') = QE0('cpetr_p','REST') ;
+
+* CEFIX('cpetr_d')=YES;
+ CERES('cpetr_d')=YES;
+* QE.FX('cpetr_d','REST') = QE0('cpetr_d','REST') ;
+
+
+
+* CEFIX('cpetr_o')=YES;
+ CERES('cpetr_o')=YES;
+* QE.FX('cpetr_o','REST') = QE0('cpetr_o','REST') ;
+
+
+
+
  pwebar(C,RW) = PWE0(C,RW);
  pwMbar(C,RW) = PWM0(C,RW);
 
@@ -128,6 +174,18 @@
 *CA reset variables to format from model.gms
  PQ.LO('CELEC') = -inf;
  PQ.UP('CELEC') = +inf;
+*fh 71218
+*fh: TEMP STAR OUT TO CHECK WHAT HAPPENS WITH NEW SAM
+$ONTEXT
+ PQ.LO('CPETR_P') = -inf;
+ PQ.UP('CPETR_P') = +inf;
+ PQ.LO('CPETR_D') = -inf;
+ PQ.UP('CPETR_D') = +inf;
+ PQ.LO('CPETR_O') = -inf;
+ PQ.UP('CPETR_O') = +inf;
+$OFFTEXT
+
+
 
  tq01(C) = 1;
  TQPS.FX = tqps0;
@@ -152,22 +210,27 @@ betaca(A,C)=1;
 
 * Energy aspects
 *Initialize values of linking variables
- EAFXCAP(RD,XC,TC,TT) = EPS;
+ EAFXCAP(XC,TC,TT) = EPS;
+ PAFXCAP(XC,TC,TT) = EPS;
 * EFLOW('IMP',XC,TC,TT) = QM0('CELEC','REST');
 * PFLOW('IMP',XC,TC,TT) = QM0('CPETR','REST');
 
  ETPRICE(TC) = PQ0('CELEC');
- EFLOW('IMP',XC,TC,TT) = QM0('CELEC','REST');
- PFLOW('IMP',XC,TC,TT) = QM0('CPETR','REST');
+* EFLOW('IMP',XC,TC,TT) = QM0('CELEC','REST');
+*fh: TEMP STAR OUT TO CHECK WHAT HAPPENS WITH NEW SAM
+* PFLOW('IMP',XC,TC,TT) = QM0('CPETR','REST');
 * AFLOW_INFuels('APETR','CCOIL',TC,TT) = QINT0('CCOIL','APETR');
  EPRICE(TC,TT)=PQ0('CELEC');
  EINVCOST(X,TC,TT) = 0;
  INVCOST(RUN,TC,TT,PRC) = 0;
  BPINV(X,TC,TCP,PRC) = 0;
 
- ECAP(RD,X,TC,TT) = 0;
- PCAP(RD,X,TC,TT) = 0;
+ ECAP(X,TC,TT) = 0;
+ PCAP(X,TC,TT) = 0;
+ HCAP(X,TC,TT) = 0;
 
  ICAGR(C,A,TC) = 0;
  gammamgr(C,H,TC,TT) = 0;
 
+ deltaq(cm,rw) = deltaq0(cm,rw);
+ deltat(cm,rw) = deltat0(cm,rw);

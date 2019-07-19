@@ -433,8 +433,9 @@ ELSE
  PA0(A)               = 1;
  PAR0(A,RD)           = 1;
  PAR0(A,RD)$QPROD(A,RD)    = SUM(ARD$MARD(ARD,A,RD), SAM('TOTAL',ARD)) / QPROD(A,RD);
- PRODSHR(A,RD)$QPROD(A,RD) = QPROD(A,RD) / QPROD(A,'NAT');
- PA0(A)$SUM(RD, PRODSHR(A,RD)*PAR0(A,RD)) = SUM(RD, PRODSHR(A,RD)*PAR0(A,RD));
+* PRODSHR(A,RD)$QPROD(A,RD) = QPROD(A,RD) / QPROD(A,'NAT');
+* PA0(A)$SUM(RD, PRODSHR(A,RD)*PAR0(A,RD)) = SUM(RD, PRODSHR(A,RD)*PAR0(A,RD));
+ PA0(A) = SUM(RD,PAR0(A,RD));
  PSUP(C)              = SUM(A$MAC(A,C), PA0(A));
  PE0(C,RW)$CERW(C,RW) = PSUP(C);
  PX0(C)$CX(C)         = PSUP(C);
@@ -464,7 +465,7 @@ ELSE
 *Energy: Special treatment for coal disaggregation
 *FH: No discard coal in the model
 * QXAC0('ACOAL','CCOAL-DIS') = CALIB('CCOAL-DIS','QA')/1000;
- QXAC0('ACOAL','CCOAL-LOW') = CALIB('CCOAL-LOW','QA')/1000;
+ QXAC0('ACOAL','CCOAL-LOW') = CALIB('CCOAL-LOW','QA');
 * QXAC0('ACOAL','CCOAL-HGH') = QA0('ACOAL') - QXAC0('ACOAL','CCOAL-DIS') - QXAC0('ACOAL','CCOAL-LOW');
  QXAC0('ACOAL','CCOAL-HGH') = QA0('ACOAL') - QXAC0('ACOAL','CCOAL-LOW');
  PXAC0('ACOAL',C)$QXAC0('ACOAL',C) = SAM('ACOAL',C)/QXAC0('ACOAL',C);
@@ -481,20 +482,24 @@ ELSE
 
 *$ontext
 *FH: Petroleum
- QXAC0('APETR','CPETR') = CALIB('CPETR','QA')/1000;
- QXAC0('APETR','CPETR_O') = CALIB('CPETR_O','QA')/1000;
- QXAC0('APETR','CPETR_T') = CALIB('CPETR_T','QA')/1000;
- PXAC0('APETR',C)$QXAC0('APETR',C)= (SAM('APETR-OIL',C)+SAM('APETR-CTL',C)+SAM('APETR-GTL',C)+SAM('APETR-BIO',C))/QXAC0('APETR',C);
+ QXAC0('APETR','CPETR_D') = CALIB('CPETR_D','QA');
+ QXAC0('APETR','CPETR_O') = CALIB('CPETR_O','QA');
+ QXAC0('APETR','CPETR_P') = CALIB('CPETR_P','QA');
+* PXAC0('APETR',C)$QXAC0('APETR',C)= (SAM('APETR-OIL',C)+SAM('APETR-CTL',C)+SAM('APETR-GTL',C)+SAM('APETR-BIO',C))/QXAC0('APETR',C);
+ PXAC0('APETR','CPETR_P')= SAM('APETR','CPETR_P')/QXAC0('APETR','CPETR_P');
+ PXAC0('APETR','CPETR_D')= SAM('APETR','CPETR_D')/QXAC0('APETR','CPETR_D');
+ PXAC0('APETR','CPETR_O')= SAM('APETR','CPETR_O')/QXAC0('APETR','CPETR_O');
 
- PX0('CPETR'  )  = PXAC0('APETR','CPETR'  );
+ PX0('CPETR_P')  = PXAC0('APETR','CPETR_P');
  PX0('CPETR_O')  = PXAC0('APETR','CPETR_O');
- PX0('CPETR_T')  = PXAC0('APETR','CPETR_T');
+ PX0('CPETR_D')  = PXAC0('APETR','CPETR_D');
 
- PDS0('CPETR'  ) = PXAC0('APETR','CPETR'  );
+ PDS0('CPETR_P') = PXAC0('APETR','CPETR_P');
  PDS0('CPETR_O') = PXAC0('APETR','CPETR_O');
- PDS0('CPETR_T') = PXAC0('APETR','CPETR_T');
+ PDS0('CPETR_D') = PXAC0('APETR','CPETR_D');
 
- PE0('CPETR_T'  ,'REST') = PXAC0('APETR','CPETR_T'  );
+ PE0('CPETR_P','REST') = PXAC0('APETR','CPETR_P');
+ PE0('CPETR_D','REST') = PXAC0('APETR','CPETR_D');
  PE0('CPETR_O','REST') = PXAC0('APETR','CPETR_O');
 
 *$offtext
@@ -516,13 +521,13 @@ PARAMETER TRESHR(C,RW);
 
 *$ONTEXT
 *fh-----------------------------------------------------------------------------
-* QE0('CPETR','REST') = CALIB('CPETR','QE')/1000;
-* QE0('CPETR_O','REST') = CALIB('CPETR_O','QE')/1000;
-* QE0('CPETR_T','REST') = CALIB('CPETR_T','QE')/1000;
+* QE0('CPETR_P','REST') = CALIB('CPETR_P','QE');
+* QE0('CPETR_O','REST') = CALIB('CPETR_O','QE');
+* QE0('CPETR_D','REST') = CALIB('CPETR_D','QE');
 
-* PE0('CPETR','REST') = (SAM('CPETR','ROW')*REGEXP('CPETR','REST') - TAXPAR('EXPTAX','CPETR')*REGETX('CPETR','REST') - SUM(CTE, SAM(CTE,'CPETR'))*TRESHR('CPETR','REST'))/QE0('CPETR','REST');
- PE0('CPETR_O','REST') = (SAM('CPETR_O','ROW')*REGEXP('CPETR_O','REST') - TAXPAR('EXPTAX','CPETR_O')*REGETX('CPETR_O','REST') - SUM(CTE, SAM(CTE,'CPETR_O'))*TRESHR('CPETR_O','REST'))/QE0('CPETR_O','REST');
- PE0('CPETR_T','REST') = (SAM('CPETR_T','ROW')*REGEXP('CPETR_T','REST') - TAXPAR('EXPTAX','CPETR_T')*REGETX('CPETR_T','REST') - SUM(CTE, SAM(CTE,'CPETR_T'))*TRESHR('CPETR_T','REST'))/QE0('CPETR_T','REST');
+* PE0('CPETR_P','REST') = (SAM('CPETR_P','ROW')*REGEXP('CPETR_P','REST') - TAXPAR('EXPTAX','CPETR_P')*REGETX('CPETR_P','REST') - SUM(CTE, SAM(CTE,'CPETR_P'))*TRESHR('CPETR_P','REST'))/QE0('CPETR_P','REST');
+* PE0('CPETR_O','REST') = (SAM('CPETR_O','ROW')*REGEXP('CPETR_O','REST') - TAXPAR('EXPTAX','CPETR_O')*REGETX('CPETR_O','REST') - SUM(CTE, SAM(CTE,'CPETR_O'))*TRESHR('CPETR_O','REST'))/QE0('CPETR_O','REST');
+* PE0('CPETR_D','REST') = (SAM('CPETR_D','ROW')*REGEXP('CPETR_D','REST') - TAXPAR('EXPTAX','CPETR_D')*REGETX('CPETR_D','REST') - SUM(CTE, SAM(CTE,'CPETR_D'))*TRESHR('CPETR_D','REST'))/QE0('CPETR_D','REST');
 *fh-----------------------------------------------------------------------------
 *$OFFTEXT
 
@@ -531,6 +536,10 @@ PARAMETER TRESHR(C,RW);
  pwebar(C,RW) = PWE0(C,RW);
  te0(C,RW)$(SAM(C,'ROW')*REGEXP(C,RW)) = (TAXPAR('EXPTAX',C)*REGETX(C,RW))/(SAM(C,'ROW')*REGEXP(C,RW));
  te(C,RW)               =  te0(C,RW);
+
+ PE0('CPETR_P','REST') = (SAM('CPETR_P','ROW')*REGEXP('CPETR_P','REST') - TAXPAR('EXPTAX','CPETR_P')*REGETX('CPETR_P','REST') - SUM(CTE, SAM(CTE,'CPETR_P'))*TRESHR('CPETR_P','REST'))/QE0('CPETR_P','REST');
+ PE0('CPETR_O','REST') = (SAM('CPETR_O','ROW')*REGEXP('CPETR_O','REST') - TAXPAR('EXPTAX','CPETR_O')*REGETX('CPETR_O','REST') - SUM(CTE, SAM(CTE,'CPETR_O'))*TRESHR('CPETR_O','REST'))/QE0('CPETR_O','REST');
+ PE0('CPETR_D','REST') = (SAM('CPETR_D','ROW')*REGEXP('CPETR_D','REST') - TAXPAR('EXPTAX','CPETR_D')*REGETX('CPETR_D','REST') - SUM(CTE, SAM(CTE,'CPETR_D'))*TRESHR('CPETR_D','REST'))/QE0('CPETR_D','REST');
 
 *Quantity of output sold domestically = output quantity less quantity
 *exported = value of domestic sales divided by domestic supply price
@@ -554,21 +563,22 @@ PARAMETER TRMSHR(C,RW);
  QM0(C,RW)$CMRW(C,RW) = (SAM('ROW',C)*REGIMP(C,RW) + TAXPAR('IMPTAX',C)*REGTAR(C,RW) + SUM(CTM, SAM(CTM,C))*TRMSHR(C,RW) )/PM0(C,RW);
 
 *RSA energy CGE model
- QM0('CCOIL','REST') = CALIB('CCOIL','QM')/1000;
+ QM0('CCOIL','REST') = CALIB('CCOIL','QM');
  PM0('CCOIL','REST') = (SAM('ROW','CCOIL')+SAM('MTAX','CCOIL')+SAM('TRM','CCOIL')) / QM0('CCOIL','REST');
 
- QM0('CELEC','REST') = CALIB('AELEC','QM')/1000;
+ QM0('CELEC','REST') = CALIB('AELEC','QM');
  PM0('CELEC','REST') = (SAM('ROW','CELEC')+SAM('MTAX','CELEC')+SAM('TRM','CELEC')) / QM0('CELEC','REST');
 
 *$ONTEXT
 *fh-----------------------------------------------------------------------------
- QM0('CPETR','REST') = CALIB('CPETR','QM')/1000;
- QM0('CPETR_O','REST') = CALIB('CPETR_O','QM')/1000;
- QM0('CPETR_T','REST') = CALIB('CPETR_T','QM')/1000;
+ QM0('CPETR_P','REST') = CALIB('CPETR_P','QM');
+ QM0('CPETR_O','REST') = CALIB('CPETR_O','QM');
+ QM0('CPETR_D','REST') = CALIB('CPETR_D','QM');
 
-* PM0('CPETR','REST')   = (SAM('ROW','CPETR') + TAXPAR('IMPTAX','CPETR')*REGTAR('CPETR','REST') + SUM(CTM, SAM(CTM,'CPETR'))*TRMSHR('CPETR','REST'))/QM0('CPETR','REST');
- PM0('CPETR_O','REST') = (SAM('ROW','CPETR_O') + TAXPAR('IMPTAX','CPETR_O')*REGTAR('CPETR_O','REST') + SUM(CTM, SAM(CTM,'CPETR_O'))*TRMSHR('CPETR_O','REST'))/QM0('CPETR_O','REST');
- PM0('CPETR_T','REST') = (SAM('ROW','CPETR_T') + TAXPAR('IMPTAX','CPETR_T')*REGTAR('CPETR_T','REST') + SUM(CTM, SAM(CTM,'CPETR_T'))*TRMSHR('CPETR_T','REST'))/QM0('CPETR_T','REST');
+* PM0('CPETR_P','REST') = (SAM('ROW','CPETR_P') + TAXPAR('IMPTAX','CPETR_P')*REGTAR('CPETR_P','REST') + SUM(CTM, SAM(CTM,'CPETR_P'))*TRMSHR('CPETR_P','REST'))/QM0('CPETR_P','REST');
+* PM0('CPETR_O','REST') = (SAM('ROW','CPETR_O') + TAXPAR('IMPTAX','CPETR_O')*REGTAR('CPETR_O','REST') + SUM(CTM, SAM(CTM,'CPETR_O'))*TRMSHR('CPETR_O','REST'))/QM0('CPETR_O','REST');
+* PM0('CPETR_D','REST') = (SAM('ROW','CPETR_D') + TAXPAR('IMPTAX','CPETR_D')*REGTAR('CPETR_D','REST') + SUM(CTM, SAM(CTM,'CPETR_D'))*TRMSHR('CPETR_D','REST'))/QM0('CPETR_D','REST');
+
 *fh-----------------------------------------------------------------------------
 *$OFFTEXT
 
@@ -577,6 +587,10 @@ PARAMETER TRMSHR(C,RW);
  pwMbar(C,RW) = PWm0(C,RW);
  tm0(C,RW)$(SAM('ROW',C)*REGIMP(C,RW))  = (TAXPAR('IMPTAX',C)*REGTAR(C,RW)) / (SAM('ROW',C)*REGIMP(C,RW));
  tm(C,RW) = tm0(C,RW);
+
+ PM0('CPETR_P','REST') = (SAM('ROW','CPETR_P') + TAXPAR('IMPTAX','CPETR_P')*REGTAR('CPETR_P','REST') + SUM(CTM, SAM(CTM,'CPETR_P'))*TRMSHR('CPETR_P','REST'))/QM0('CPETR_P','REST');
+ PM0('CPETR_O','REST') = (SAM('ROW','CPETR_O') + TAXPAR('IMPTAX','CPETR_O')*REGTAR('CPETR_O','REST') + SUM(CTM, SAM(CTM,'CPETR_O'))*TRMSHR('CPETR_O','REST'))/QM0('CPETR_O','REST');
+ PM0('CPETR_D','REST') = (SAM('ROW','CPETR_D') + TAXPAR('IMPTAX','CPETR_D')*REGTAR('CPETR_D','REST') + SUM(CTM, SAM(CTM,'CPETR_D'))*TRMSHR('CPETR_D','REST'))/QM0('CPETR_D','REST');
 
 *Composite supply is the sum of domestic market sales and imports
 *(since they are initialized at the same price).
@@ -647,7 +661,8 @@ PARAMETER
 ;
 
 SCALAR
- alphawfdist range for value of capital parameter /.2/
+ alphawfdist range for value of capital parameter /0.0/
+*/.2/
 ;
 
 
@@ -1064,18 +1079,19 @@ $offtext
 *JAMES 28-5-2013: aggregate energy subsectors
 *------------------------------------------------------------------
 SET
- APETR(AC) / apetr-oil, apetr-ctl, apetr-gtl, apetr-bio  /
- AELEC(AC) / aelec-cds, aelec-clw, aelec-nuc, aelec-hyd, aelec-spv, aelec-sth, aelec-wnd, aelec-geo, aelec-was, aelec-gas, aelec-die, aelec-imp /
+ APETR(AC) / apetr/
+ AELEC(AC) / aelec/
  RDNT(RD)  RD set without aggregate sector
- AAG(A)    sectors to aggregate / AELEC, APETR /
+ AAG(A)    sectors to aggregate / /
 ;
 
 ALIAS (RDNT,RDNTP);
 
 *RD set without national or aggregate
  RDNT(RD) = YES;
- RDNT('NAT') = NO;
- RDNT('imp') = NO;
+*FH 30/01/2019: ONLY HAVE NAT THEREFORE CANNOT SET=0
+* RDNT('NAT') = NO;
+* RDNT('imp') = NO;
 
 *Only aggregate leontief activities
 *  (otherwise have to recalibrate CES production function)
@@ -1142,7 +1158,6 @@ ALIAS (RDNT,RDNTP);
 
  deltaa2(AAG,'NAT')$QAR0(AAG,'NAT') = (PAR0(AAG,'NAT')*(QAR0(AAG,'NAT'))**(1+rhoa2(AAG)))/SUM(RDNT, PAR0(AAG,RDNT)*(QAR0(AAG,RDNT))**(1+rhoa2(AAG)));
  alphaa2(AAG)$QA0(AAG) = QA0(AAG)/(SUM(RDNT$QAR0(AAG,RDNT), deltaa2(AAG,RDNT)*QAR0(AAG,RDNT)**(-rhoa2(AAG))))**(-1/rhoa2(AAG));
-
 
 *Remove sub-national variables (leave coefficients)
  QAR0(AAG,RDNT)   = 0;
@@ -1429,8 +1444,6 @@ EQUATIONS
  GDPMPDEF    define GDP at market prices
 ;
 
-
-
 *Carbon tax rates
  tco2d0  = 0;
  tco2e0  = 0;
@@ -1438,8 +1451,8 @@ EQUATIONS
  tco2m0  = 0;
 *CO2 emissions factors
  co2c0(C) = 0;
- co2c0('CCOAL')     = CALIB('CCOAL','EMc');
- co2c0('CCOAL-DIS') = CALIB('CCOAL-DIS','EMc');
+*FH 30/01/2019 co2c0('CCOAL')     = CALIB('CCOAL','EMc');
+*FH 30/01/2019 co2c0('CCOAL-DIS') = CALIB('CCOAL-DIS','EMc');
  co2c0('CCOAL-LOW') = CALIB('CCOAL-LOW','EMc');
  co2c0('CCOAL-HGH') = CALIB('CCOAL-HGH','EMc');
  co2c0('CCOIL')     = CALIB('CCOIL','EMc');
@@ -1974,25 +1987,26 @@ PARAMETER
  CALIB2(AC,*)    Check energy calibration quantities
 ;
 
- CALIB2('CCOAL-DIS','QA') = QX0('CCOAL-DIS');
+*FH 30/01/2019
+* CALIB2('CCOAL-DIS','QA') = QX0('CCOAL-DIS');
  CALIB2('CCOAL-LOW','QA') = QX0('CCOAL-LOW');
  CALIB2('CCOAL-HGH','QA') = QX0('CCOAL-HGH');
- CALIB2('CCOAL','QA')     = CALIB2('CCOAL-DIS','QA') + CALIB2('CCOAL-LOW','QA') + CALIB2('CCOAL-HGH','QA');
+* CALIB2('CCOAL','QA')     = CALIB2('CCOAL-DIS','QA') + CALIB2('CCOAL-LOW','QA') + CALIB2('CCOAL-HGH','QA');
 
- CALIB2('CCOAL-DIS','QM') = SUM(RW, QM0('CCOAL-DIS',RW));
+* CALIB2('CCOAL-DIS','QM') = SUM(RW, QM0('CCOAL-DIS',RW));
  CALIB2('CCOAL-LOW','QM') = SUM(RW, QM0('CCOAL-LOW',RW));
  CALIB2('CCOAL-HGH','QM') = SUM(RW, QM0('CCOAL-HGH',RW));
- CALIB2('CCOAL','QM')     = CALIB2('CCOAL-DIS','QM') + CALIB2('CCOAL-LOW','QM') + CALIB2('CCOAL-HGH','QM');
+* CALIB2('CCOAL','QM')     = CALIB2('CCOAL-DIS','QM') + CALIB2('CCOAL-LOW','QM') + CALIB2('CCOAL-HGH','QM');
 
- CALIB2('CCOAL-DIS','QE') = SUM(RW, QE0('CCOAL-DIS',RW));
+* CALIB2('CCOAL-DIS','QE') = SUM(RW, QE0('CCOAL-DIS',RW));
  CALIB2('CCOAL-LOW','QE') = SUM(RW, QE0('CCOAL-LOW',RW));
  CALIB2('CCOAL-HGH','QE') = SUM(RW, QE0('CCOAL-HGH',RW));
- CALIB2('CCOAL','QE')     = CALIB2('CCOAL-DIS','QE') + CALIB2('CCOAL-LOW','QE') + CALIB2('CCOAL-HGH','QE');
+* CALIB2('CCOAL','QE')     = CALIB2('CCOAL-DIS','QE') + CALIB2('CCOAL-LOW','QE') + CALIB2('CCOAL-HGH','QE');
 
- CALIB2('CCOAL-DIS','QQ') = QQ0('CCOAL-DIS');
+* CALIB2('CCOAL-DIS','QQ') = QQ0('CCOAL-DIS');
  CALIB2('CCOAL-LOW','QQ') = QQ0('CCOAL-LOW');
  CALIB2('CCOAL-HGH','QQ') = QQ0('CCOAL-HGH');
- CALIB2('CCOAL','QQ')     = CALIB2('CCOAL-DIS','QQ') + CALIB2('CCOAL-LOW','QQ') + CALIB2('CCOAL-HGH','QQ');
+* CALIB2('CCOAL','QQ')     = CALIB2('CCOAL-DIS','QQ') + CALIB2('CCOAL-LOW','QQ') + CALIB2('CCOAL-HGH','QQ');
 
  CALIB2('CCOIL','QA') = QX0('CCOIL');
  CALIB2('CCOIL','QM') = SUM(RW, QM0('CCOIL',RW));
@@ -2028,3 +2042,6 @@ $OFFTEXT
 
 * leova(A,RD) = 1.2;
  SOLVE STANDCGE USING MCP;
+
+$INCLUDE FUELVOL.INC
+$INCLUDE ICA.INC

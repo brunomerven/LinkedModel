@@ -111,6 +111,10 @@ PARAMETER
 $loaddc SAM AELASTAB DELASTAB FELASTAB YELASTAB EMPTAB WAGETAB MARD REGIMP REGTAR REGEXP REGETX POPTAB
 $load NEST FDATATYPE
 
+*FH 14022019 MAKE ELECTRICITY A NET EXPORT
+* SAM('CELEC','ROW')=SAM('CELEC','ROW')-SAM('ROW','CELEC');
+* SAM('ROW','CELEC')=0;
+
 *RSA: Not sure why this is here (from SAM BUILDER)
  SAM('S-I','DSTK') = 0;
 
@@ -158,14 +162,16 @@ $ontext
 $offtext
 
 *CORRECTIONS: Increase imports and exports by same amount to hit target (???)
- SAM('ROW','CELEC') = SAM('ROW','CELEC') + 0.21* SAM('CELEC','ROW');
- SAM('CELEC','ROW') = SAM('CELEC','ROW') + 0.21* SAM('CELEC','ROW');
+*FH 14022019 REMOVED
+* SAM('ROW','CELEC') = SAM('ROW','CELEC') + 0.21* SAM('CELEC','ROW');
+* SAM('CELEC','ROW') = SAM('CELEC','ROW') + 0.21* SAM('CELEC','ROW');
 
+*FH 30/01/19: Code no longer needed. No discard coal. No energy by technology.
 *Move discard coal to low grade coal
- SAM(ACNT,'CCOAL-LOW') = SAM(ACNT,'CCOAL-LOW')+SAM(ACNT,'CCOAL-DIS');
- SAM('CCOAL-LOW',ACNT) = SAM('CCOAL-LOW',ACNT)+SAM('CCOAL-DIS',ACNT);
- SAM(ACNT,'CCOAL-DIS') = 0;
- SAM('CCOAL-DIS',ACNT) = 0;
+* SAM(ACNT,'CCOAL-LOW') = SAM(ACNT,'CCOAL-LOW')+SAM(ACNT,'CCOAL-DIS');
+* SAM('CCOAL-LOW',ACNT) = SAM('CCOAL-LOW',ACNT)+SAM('CCOAL-DIS',ACNT);
+* SAM(ACNT,'CCOAL-DIS') = 0;
+* SAM('CCOAL-DIS',ACNT) = 0;
 
 *FH Changed: value for exports was negative. Code removed.
 * SAM('CCOAL-LOW','ROW') = SAM('CCOAL-LOW','ROW') + SAM('CCOAL-LOW','DSTK');
@@ -175,10 +181,10 @@ $offtext
 * SAM('S-I','ROW') = 0;
 * SAM('S-I','ROW') = SUM(ACNT, SAM('ROW',ACNT) - SAM(ACNT,'ROW'));
 
- SAM(ACNT,'AELEC-CLW') = SAM(ACNT,'AELEC-CLW')+SAM(ACNT,'AELEC-CDS');
- SAM('AELEC-CLW',ACNT) = SAM('AELEC-CLW',ACNT)+SAM('AELEC-CDS',ACNT);
- SAM(ACNT,'AELEC-CDS') = 0;
- SAM('AELEC-CDS',ACNT) = 0;
+* SAM(ACNT,'AELEC-CLW') = SAM(ACNT,'AELEC-CLW')+SAM(ACNT,'AELEC-CDS');
+* SAM('AELEC-CLW',ACNT) = SAM('AELEC-CLW',ACNT)+SAM('AELEC-CDS',ACNT);
+* SAM(ACNT,'AELEC-CDS') = 0;
+* SAM('AELEC-CDS',ACNT) = 0;
 
 *----------------------------------------------------------------------------
 *3. Adjustments to the SAM (based on set definition above)
@@ -231,15 +237,16 @@ $offtext
  SAM(CTM,C)$(EXPX(C) + IMPX(C) + DOMX(C)) = IMPX(C) / (EXPX(C) + IMPX(C) + DOMX(C)) * SAM('TRC',C);
  SAM(CTD,C)$(EXPX(C) + IMPX(C) + DOMX(C)) = DOMX(C) / (EXPX(C) + IMPX(C) + DOMX(C)) * SAM('TRC',C);
 
-*$ontext
+$ontext
 *FH: Fix exports problem - physical energy units is too low ---
+ SAM(CTE,'CPETR_P') = 0;
  SAM(CTE,'CPETR_O') = 0;
- SAM(CTE,'CPETR_T') = 0;
+ SAM(CTE,'CPETR_D') = 0;
 
+ SAM(CTD,'CPETR_P')$(EXPX('CPETR_P') + IMPX('CPETR_P') + DOMX('CPETR_P')) = (DOMX('CPETR_P')+EXPX('CPETR_P')) / (EXPX('CPETR_P') + IMPX('CPETR_P') + DOMX('CPETR_P')) * SAM('TRC','CPETR_P');
  SAM(CTD,'CPETR_O')$(EXPX('CPETR_O') + IMPX('CPETR_O') + DOMX('CPETR_O')) = (DOMX('CPETR_O')+EXPX('CPETR_O')) / (EXPX('CPETR_O') + IMPX('CPETR_O') + DOMX('CPETR_O')) * SAM('TRC','CPETR_O');
- SAM(CTD,'CPETR_T')$(EXPX('CPETR_T') + IMPX('CPETR_T') + DOMX('CPETR_T')) = (DOMX('CPETR_T')+EXPX('CPETR_T')) / (EXPX('CPETR_T') + IMPX('CPETR_T') + DOMX('CPETR_T')) * SAM('TRC','CPETR_T');
-*$offtext
-*---
+ SAM(CTD,'CPETR_D')$(EXPX('CPETR_D') + IMPX('CPETR_D') + DOMX('CPETR_D')) = (DOMX('CPETR_D')+EXPX('CPETR_D')) / (EXPX('CPETR_D') + IMPX('CPETR_D') + DOMX('CPETR_D')) * SAM('TRC','CPETR_D');
+$offtext
 
  SAM(C,CTE) = TRSHR(C) * SUM(CP, SAM(CTE,CP));
  SAM(C,CTM) = TRSHR(C) * SUM(CP, SAM(CTM,CP));
@@ -259,7 +266,7 @@ $offtext
  SAM(AC,'TOTAL') = SUM(ACNT, SAM(AC,ACNT));
  SAMBALCHK(AC)   = SAM('TOTAL',AC) - SAM(AC,'TOTAL');
 
-*bm/sr/fh calling 1sambal to cleanout small errors   
+*bm/sr/fh calling 1sambal to cleanout small errors
 $INCLUDE includes\1sambal.inc
 
 
@@ -473,19 +480,20 @@ PARAMETER
  QTRAD(C,*)        trade quantities
  ESUMTAB(*,*,A)    summary table
  CALIB(AC,*)       production and emissions calibration data
- SHR(ARD,C)
+* SHR(ARD,C)
 ;
 
 $LOAD CALIB
 $gdxin
 
-*Primary fuel production quantities
-* QPROD('CCOAL-DIS','NAT') = CALIB('CCOAL-DIS','QA')/1000;
- QPROD('CCOAL-LOW','NAT') = CALIB('CCOAL-LOW','QA')/1000;
- QPROD('CCOAL-HGH','NAT') = CALIB('CCOAL-HGH','QA')/1000;
- QPROD('ACOAL','NAT')     = QPROD('CCOAL-DIS','NAT') + QPROD('CCOAL-LOW','NAT') + QPROD('CCOAL-HGH','NAT');
- QPROD('ANGAS','NAT')     = CALIB('CNGAS','QA')/1000;
- QPROD('ACOIL','NAT')     = CALIB('CCOIL','QA')/1000;
+*Primary fuel production quantities (PJ)
+ QPROD('CCOAL-LOW','NAT') = CALIB('CCOAL-LOW','QA');
+ QPROD('CCOAL-HGH','NAT') = CALIB('CCOAL-HGH','QA');
+ QPROD('ACOAL','NAT')     = QPROD('CCOAL-LOW','NAT') + QPROD('CCOAL-HGH','NAT');
+ QPROD('ANGAS','NAT')     = CALIB('CNGAS','QA');
+ QPROD('ACOIL','NAT')     = CALIB('CCOIL','QA');
+*FH 19032019
+ QPROD('AHYDR','NAT')     = CALIB('CHYDR','QA');
 
 $ontext
 *Petroleum production quantities (TJ)
@@ -496,25 +504,13 @@ $ontext
  QPROD('APETR','NAT') = QPROD('APETR','OIL') + QPROD('APETR','CTL') + QPROD('APETR','GTL') + QPROD('APETR','BIO');
 $offtext
 
-*Petroleum production quantities (TJ)
- QPROD('CPETR','NAT') = CALIB('CPETR','QA');
+*Petroleum production quantities (PJ)
+ QPROD('CPETR_P','NAT') = CALIB('CPETR_P','QA');
+ QPROD('CPETR_D','NAT') = CALIB('CPETR_D','QA');
  QPROD('CPETR_O','NAT') = CALIB('CPETR_O','QA');
- QPROD('CPETR_T','NAT') = CALIB('CPETR_T','QA');
- QPROD('APETR','NAT') = QPROD('CPETR','NAT') + QPROD('CPETR_O','NAT') + QPROD('CPETR_T','NAT');
+ QPROD('APETR','NAT') = QPROD('CPETR_P','NAT') + QPROD('CPETR_D','NAT') + QPROD('CPETR_O','NAT');
 
-*Electricity generation quantities (TWh)
-* QPROD('AELEC','CDS') = CALIB('AELEC-CDS','QA')/1000;
- QPROD('AELEC','CLW') = CALIB('AELEC-CLW','QA')/1000;
- QPROD('AELEC','NUC') = CALIB('AELEC-NUC','QA')/1000;
- QPROD('AELEC','HYD') = CALIB('AELEC-HYD','QA')/1000;
- QPROD('AELEC','SPV') = CALIB('AELEC-SPV','QA')/1000;
- QPROD('AELEC','STH') = CALIB('AELEC-STH','QA')/1000;
- QPROD('AELEC','WND') = CALIB('AELEC-WND','QA')/1000;
- QPROD('AELEC','GEO') = CALIB('AELEC-GEO','QA')/1000;
- QPROD('AELEC','WAS') = CALIB('AELEC-WAS','QA')/1000;
- QPROD('AELEC','GAS') = CALIB('AELEC-GAS','QA')/1000;
- QPROD('AELEC','DIE') = CALIB('AELEC-DIE','QA')/1000;
- QPROD('AELEC','NAT') = QPROD('AELEC','CDS') + QPROD('AELEC','CLW') + QPROD('AELEC','NUC') + QPROD('AELEC','HYD') + QPROD('AELEC','SPV') + QPROD('AELEC','STH') + QPROD('AELEC','WND') + QPROD('AELEC','GEO') + QPROD('AELEC','WAS') + QPROD('AELEC','GAS') + QPROD('AELEC','DIE');
-
+*Electricity generation quantities (PJ)
+ QPROD('AELEC','NAT') = CALIB('AELEC','QA');
 
 *display '*#* SAM at bottom of 1model.dat', SAM;

@@ -1,0 +1,61 @@
+SET ALL_REG /
+  'REGION1'
+/;
+SET REG /
+  'REGION1'                  'South Africa                                      '
+/;
+SET PRC /
+  'MINCSMAT-E'               'Matla extension contract                          '
+  'MINCSMAT-F'               'Matla mine contract extension option              '
+/;
+SET PRC_PRE /
+  'REGION1'   .'MINCSMAT-E'
+  'REGION1'   .'MINCSMAT-F'
+/;
+SET PRC_ANNUAL /
+  'REGION1'   .'MINCSMAT-E'
+  'REGION1'   .'MINCSMAT-F'
+/;
+SET PRCTACTUNT /
+  'REGION1'.'MINCSMAT-E'.'PJ'
+  'REGION1'.'MINCSMAT-F'.'PJ'
+/;
+PARAMETER ANCAP_START /
+  'REGION1'                 .'MINCSMAT-F'                 2022
+/;
+PARAMETER APRCCAPACT /
+  'REGION1'                 .'MINCSMAT-E'                 1
+  'REGION1'                 .'MINCSMAT-F'                 1
+/;
+       TABLE ACAP_BND
+                                                                                     0     2012            2013            2014            2015            2016            2017            2018            2019            2020            2021            2022            2023            2024            2025            2026            2027            2028            2029            2030            2031            2032            2033            2034            2035            2036            2037            2038            2039            2040            2045            2050            2060            2070            
+  'REGION1'                 .'MINCSMAT-E'              .'FX'                                                                                                                               196.95                                                                                                                                                                                                                                                                                                                                                                                                                          
+;
+       TABLE ANCAP_BND
+                                                                                     0     2012            2013            2014            2015            2016            2017            2018            2019            2020            2021            2022            2023            2024            2025            2026            2027            2028            2029            2030            2031            2032            2033            2034            2035            2036            2037            2038            2039            2040            2045            2050            2060            2070            
+  'REGION1'                 .'MINCSMAT-E'              .'FX'                                                                                                                               196.95                                                                                                                                                                                                                                                                                                                                                                                                                          
+  'REGION1'                 .'MINCSMAT-E'              .'UP'                              EPS             EPS             EPS             EPS             EPS             EPS              196.95         EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS
+  'REGION1'                 .'MINCSMAT-F'              .'UP'                                                                                                                                                                                               196.95         EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS
+;
+       TABLE ANCAP_COST
+                                                          0     2012            2013            2014            2015            2016            2017            2018            2019            2020            2021            2022            2023            2024            2025            2026            2027            2028            2029            2030            2031            2032            2033            2034            2035            2036            2037            2038            2039            2040            2045            2050            2060            2070            
+  'REGION1'                 .'MINCSMAT-E'                      EPS             EPS             EPS             EPS             EPS             EPS              8.54                                                                                                                                                                                                                                                                                                                                                                                                                            
+  'REGION1'                 .'MINCSMAT-F'                       8.06                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+;
+       TABLE ANCAP_FOM
+                                                          0     2012            2013            2014            2015            2016            2017            2018            2019            2020            2021            2022            2023            2024            2025            2026            2027            2028            2029            2030            2031            2032            2033            2034            2035            2036            2037            2038            2039            2040            2045            2050            2060            2070            
+  'REGION1'                 .'MINCSMAT-E'                                                                                                                      EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS
+  'REGION1'                 .'MINCSMAT-F'                      EPS                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+;
+       TABLE ANCAP_ILED
+                                                          0     2012            2013            2014            2015            2016            2017            2018            2019            2020            2021            2022            2023            2024            2025            2026            2027            2028            2029            2030            2031            2032            2033            2034            2035            2036            2037            2038            2039            2040            2045            2050            2060            2070            
+  'REGION1'                 .'MINCSMAT-F'                       1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+;
+       TABLE ANCAPTLIFE
+                                                          0     2012            2013            2014            2015            2016            2017            2018            2019            2020            2021            2022            2023            2024            2025            2026            2027            2028            2029            2030            2031            2032            2033            2034            2035            2036            2037            2038            2039            2040            2045            2050            2060            2070            
+  'REGION1'                 .'MINCSMAT-E'                                                                                                                       5                                                                                                                                                                                                                                                                                                                                                                                                                               
+;
+       TABLE APRC_RESID
+                                                          0     2012            2013            2014            2015            2016            2017            2018            2019            2020            2021            2022            2023            2024            2025            2026            2027            2028            2029            2030            2031            2032            2033            2034            2035            2036            2037            2038            2039            2040            2045            2050            2060            2070            
+  'REGION1'                 .'MINCSMAT-E'                                                                                                                      EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS             EPS
+;
