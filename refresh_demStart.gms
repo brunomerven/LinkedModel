@@ -17,12 +17,12 @@ Tonkm(COM,AY)             Tonkm for Freight transport
 
 ;
 
-$gdxin FreightUcon_NB6C.gdx
-$load COM AY FS FH FT H MFHHT SFORE_X TFHPOP_X SIM_DEMX Passengerkm Tonkm
+$gdxin NewCoalSAM2.gdx
+$load COM AY FS FH FT H MFHHT SFORE_X TFHPOP_X
 
-$call   "gdxxrw i=SATM\DMD_PRJ.xlsx o=dmd_prj_temp.gdx index=Index_E2G!a6"
+$call   "gdxxrw i=C:\SATIMGE_02\SATM\DMD_PRJ.xlsx o=dmd_prj_temp.gdx index=Index_E2G!a6"
 $gdxin  dmd_prj_temp.gdx
-$load PKMFH
+$load SIM_DEMX PKMFH Passengerkm Tonkm
 
 $GDXout mcdem_start.gdx
 $unload MFHHT SFORE_X TFHPOP_X SIM_DEMX PKMFH Passengerkm Tonkm

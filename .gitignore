@@ -24,7 +24,6 @@
 *.7z
 Other Tools/*
 SATM/*
-Links/*
 satimviz/*
 *.bat
 *.gch
@@ -44,3 +43,11 @@ RDSFiles/Archive/
 *.zip
 
 *.twb
+
+Links/2012 SAM/
+
+Links/store/
+
+Links/eSAM builder/desktop\.ini
+
+*.~xl
