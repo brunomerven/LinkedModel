@@ -396,6 +396,9 @@ $offtext
  AFX('AGOLD',RD)=YES;
  ANFX(A,RD)$(NOT AFX(A,RD))=YES;
  AFXGR('AGOLD','NAT',XC,TC) = -0.001;
+*bm
+ AFLEO('AGOLD') = YES;
+
 * AFXGR('AGOLD','NAT',XC,TC) = 0.08;
 
 $ontext

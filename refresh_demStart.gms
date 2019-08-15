@@ -17,7 +17,7 @@ Tonkm(COM,AY)             Tonkm for Freight transport
 
 ;
 
-$gdxin NewCoalSAM2.gdx
+$gdxin NewCoalSAM5.gdx
 $load COM AY FS FH FT H MFHHT SFORE_X TFHPOP_X
 
 $call   "gdxxrw i=C:\SATIMGE_02\SATM\DMD_PRJ.xlsx o=dmd_prj_temp.gdx index=Index_E2G!a6"

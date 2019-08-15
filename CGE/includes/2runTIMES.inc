@@ -124,6 +124,11 @@ $offtext
 *bm methane rich gas is currently a product of sasol which is accounted for in SATIM, but not in eSAGE so making this zero
  FLOW_OUT_FSFuels('petr','cngas',TC,TT) = 0;
 
+*Correction made for Pulp and paper own gen, this may have to be done to more sectors as own gen becomes more prevalent
+ FLOW_IN_FSFuels('pp','celec',TC,TT) = FLOW_IN_FSFuels('pp','celec',TC,TT) - FLOW_OUT_FSFuels('pp','celec',TC,TT);
+
+
+
 *UCONV_C_T2C(C);
 
 *bm calc oil flow
