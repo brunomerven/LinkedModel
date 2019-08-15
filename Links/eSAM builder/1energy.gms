@@ -120,18 +120,35 @@ Parameter
 
  htrval(h)=(SAM('cvehi',h))/1000;
  atrval(a)=SAM('cpetr',a)*(SAM('cvehi','altrp')/sum(acntp,SAM(acntp,'altrp')))/(SAM('cpetr','altrp')/sum(acntp,SAM(acntp,'altrp')))/1000;
-
-*Shift non-ferrous metals consumption of liquid fuels to iron. EB reports no liquid fuel consumption.Iron chosen as a large share of iron
+$ontext
+*Shift non-ferrous metals consumption of liquid fuels to iron. EB reports no liquid fuel consumption for non-ferrous.Iron chosen as a large share of iron
 *is consumed by non-ferrous metals and the average price for other fuels (non-petrol and diesel) is higher than the average suggested by the EB.
  SAM('cpetr','airon')=SAM('cpetr','airon')+SAM('cpetr','anfrm');
  SAM('airon','ciron')=SAM('airon','ciron')+SAM('cpetr','anfrm');
  SAM('ciron','anfrm')=SAM('ciron','anfrm')+SAM('cpetr','anfrm');
  SAM('cpetr','anfrm')=0;
+$offtext
 
 *Aggregate SAM to match to EB
  ASAM(AGGACNT,AGGACNTP) =SUM((ACNT,ACNTP)$(MAGGAC(ACNT,AGGACNT) and MAGGAC(ACNTP,AGGACNTP)),SAM(ACNT,ACNTP))/1000;
  ASAM(AGGAC,'TOTAL')=SUM(AGGACNTP,ASAM(AGGAC,AGGACNTP));
  ASAM('TOTAL',AGGAC)=SUM(AGGACNTP,ASAM(AGGACNTP,AGGAC));
+
+ SAMBALCHK2(AGGACNT)=SUM(AGGACNTP,ASAM(AGGACNT,AGGACNTP))-SUM(AGGACNTP,ASAM(AGGACNTP,AGGACNT));
+ DISPLAY SAMBALCHK2;
+
+*shift dstk into exports
+*shift s-i into other - temporary
+ ASAM('cref','row')=ASAM('cref','row')+ASAM('cref','dstk');
+ ASAM('s-i','row')=ASAM('s-i','row')-ASAM('cref','dstk');
+ ASAM('dstk','s-i')=ASAM('dstk','s-i')-ASAM('cref','dstk');
+ ASAM('cref','dstk')=0;
+
+ ASAM('cref','aoin')= ASAM('cref','aoin')+ASAM('cref','s-i');
+ ASAM('aoin','coin')= ASAM('aoin','coin')+ASAM('cref','s-i');
+ ASAM('coin','row') = ASAM('coin','row')+ASAM('cref','s-i');
+ ASAM('s-i','row')  = ASAM('s-i','row')-ASAM('cref','s-i');
+ ASAM('cref','s-i') =0;
 
  SAMBALCHK2(AGGACNT)=SUM(AGGACNTP,ASAM(AGGACNT,AGGACNTP))-SUM(AGGACNTP,ASAM(AGGACNTP,AGGACNT));
  DISPLAY SAMBALCHK2;
@@ -162,6 +179,8 @@ PARAMETER
  EDEM('H1',FUEL)=-(EBAL('H1',FUEL)+HPRTRNS('H1',FUEL));
  EDEM('H2',FUEL)=-(EBAL('H2',FUEL)+HPRTRNS('H2',FUEL));
  EDEM('H3',FUEL)=-(EBAL('H3',FUEL)+HPRTRNS('H3',FUEL));
+ EBAL('atrl_pr',FUEL)=0;
+
  EDEM('atrl_pr',FUEL)=0;
  EDEM(EELEC,'ELECTRICITY')=0;
  EDEM(EPETR,LFUELT)=0;
@@ -189,15 +208,6 @@ Parameter
  trvaggh(aggac,hagg)               values to be extracted from households
 ;
 
-*move stocks of cpetr to exports which are lower than ebval suggests it should be
- ASAM('cref','row')=ASAM('cref','row')+ASAM('cref','dstk');
- ASAM('s-i','row')=ASAM('s-i','row')-ASAM('cref','dstk');
- ASAM('dstk','s-i')=ASAM('dstk','s-i')-ASAM('cref','dstk');
- ASAM('cref','dstk')=0;
-
- SAMBALCHK2(AGGACNT)=SUM(AGGACNTP,ASAM(AGGACNT,AGGACNTP))-SUM(AGGACNTP,ASAM(AGGACNTP,AGGACNT));
- DISPLAY SAMBALCHK2;
-
 *Calculating consumption shares of land transport sector
  trshr(aggacnt)=0;
  trshr('flab')=ASAM('flab',"atrl")/sum(aggacntp,ASAM(aggacntp,"atrl"));
@@ -205,13 +215,63 @@ Parameter
 *relative to trshr
  trshr(aggacnt)= trshr(aggacnt)/trshr('cref');
 *dampened to avoid negative values in SAM
- trshr(aggacnt)=trshr(aggacnt)*0.9;
+ trshr(aggacnt)=trshr(aggacnt)*0.5;
  trshr('cref')=1;
 
 *Energy balance value of sector fuel usage (divided by billion to be consistent with SAM)
  ebval(EBA,FUEL)  =(EDEM(EBA,FUEL)*PFUEL(FUEL))/1000;
  ebval('exp',FUEL)=(EEXP(FUEL)*PFUEL(FUEL))/1000;
  ebval('imp',FUEL)=(EIMP(FUEL)*PFUEL(FUEL))/1000;
+
+*scale up eb values such that there totals match that in the SAM
+*note: SAM numbers reflect more consumption by industry (relative to exports and households)
+*than what is implied by the energy balance values. exports and household consumption is
+*therefore likely to be lower than that reflected in the energy balance.
+ parameter
+ scalar1
+ scalar2
+ scalar3;
+
+ scalar1=sum(AGG,ASAM('cref',AGG))/
+          sum(fuel,
+             (ebval('aaff',fuel)+
+              ebval('amin',fuel)+
+              ebval('afab',fuel)+
+              ebval('aoin',fuel)+
+              ebval('apap',fuel)+
+              ebval('airo',fuel)+
+              ebval('acom',fuel)+
+              ebval('atra',fuel)+
+              ebval('aelc_oil',fuel)+
+              ebval('atrl_f',fuel)+
+              ebval('atrl_p',fuel)));
+
+ scalar2=sum(HAGG,ASAM('cref',HAGG))/
+          sum(fuel,
+             (ebval('h1',fuel)+
+              ebval('h2',fuel)+
+              ebval('h3',fuel)));
+
+ scalar3=ASAM('cref','row')/
+          sum(fuel,ebval('exp',fuel));
+
+ ebval('aaff',fuel)    = ebval('aaff',fuel)     *scalar1;
+ ebval('amin',fuel)    = ebval('amin',fuel)     *scalar1;
+ ebval('afab',fuel)    = ebval('afab',fuel)     *scalar1;
+ ebval('aoin',fuel)    = ebval('aoin',fuel)     *scalar1;
+ ebval('apap',fuel)    = ebval('apap',fuel)     *scalar1;
+ ebval('airo',fuel)    = ebval('airo',fuel)     *scalar1;
+ ebval('acom',fuel)    = ebval('acom',fuel)     *scalar1;
+ ebval('atra',fuel)    = ebval('atra',fuel)     *scalar1;
+ ebval('aelc_oil',fuel)= ebval('aelc_oil',fuel) *scalar1;
+ ebval('atrl_f',fuel)  = ebval('atrl_f',fuel)   *scalar1;
+ ebval('atrl_p',fuel)  = ebval('atrl_p',fuel)   *scalar1;
+
+ ebval('h1',fuel)  = ebval('h1',fuel)   *scalar2;
+ ebval('h2',fuel)  = ebval('h2',fuel)   *scalar2;
+ ebval('h3',fuel)  = ebval('h3',fuel)   *scalar2;
+
+ ebval('exp',fuel)  = ebval('exp',fuel) *scalar3;
 
 *Calculating values to subtract from other activities
  trvaggac('cref',agg)$(ASAM('cref',agg) and ASAM('cref',agg))=(ASAM('cref',agg)
@@ -261,14 +321,40 @@ $offtext
  ASAM('atrl','ctrf')=ASAM('atrl','ctrf')+sum((aggac,agg),trvaggac(aggac,agg));
  ASAM('atrl','ctrp')=ASAM('atrl','ctrp')+sum((aggac,hagg),trvaggh(aggac,hagg));
 
+*special case: mining and fab petrol consumption not enough. therefore increase
+*and decrease consumption of freight services used
+ ASAM('ctrf','amin')=ASAM('ctrf','amin')+(ASAM('cref','amin')-sum(fuel,ebval('amin',fuel)));
+ ASAM('ctrf','afab')=ASAM('ctrf','afab')+(ASAM('cref','afab')-sum(fuel,ebval('afab',fuel)));
+ ASAM('ctrf','aelc')=ASAM('ctrf','aelc')+(ASAM('cref','aelc')-sum(fuel,ebval('aelc_oil',fuel)));
+ ASAM('atrl','ctrf')= ASAM('atrl','ctrf')
+                          +(ASAM('cref','amin')-sum(fuel,ebval('amin',fuel)))
+                          +(ASAM('cref','afab')-sum(fuel,ebval('afab',fuel)))
+                          +(ASAM('cref','aelc')-sum(fuel,ebval('aelc_oil',fuel)));
+
+ ASAM('cref','atrl')=ASAM('cref','atrl')
+                          +(ASAM('cref','amin')-sum(fuel,ebval('amin',fuel)))
+                          +(ASAM('cref','afab')-sum(fuel,ebval('afab',fuel)))
+                          +(ASAM('cref','aelc')-sum(fuel,ebval('aelc_oil',fuel)));
+
+ ASAM('cref','amin')=sum(fuel,ebval('amin',fuel));
+ ASAM('cref','afab')=sum(fuel,ebval('afab',fuel));
+ ASAM('cref','aelc')=sum(fuel,ebval('aelc_oil',fuel));
+
+*household split of liquid fuel consumption is different from thet suggested by the energy
+*balance therefore adjust to bring in line. Aggregate household is the same.
+ ASAM('ctrp',HAGG)=ASAM('ctrp',HAGG)+(ASAM('cref',HAGG)-sum((eba,fuel)$MECAGGAC(EBA,HAGG),ebval(eba,fuel)));
+ ASAM('cref',HAGG)=sum((eba,fuel)$MECAGGAC(EBA,HAGG),ebval(eba,fuel));
+
  ASAM(AGGAC,'TOTAL')=SUM(AGGACNTP,ASAM(AGGACNTP,AGGAC));
  ASAM('TOTAL',AGGAC)=SUM(AGGACNTP,ASAM(AGGAC,AGGACNTP));
+
+ SAMBALCHK2(AGGACNT)=SUM(AGGACNTP,ASAM(AGGACNT,AGGACNTP))-SUM(AGGACNTP,ASAM(AGGACNTP,AGGACNT));
 
 *include three refinery products (diesel, petrol and other)
 *handling the consumption side (rows)
 Parameter
  tempagg(eba,*)
- tempagg2(aggac,*);
+ tempagg2(eba,*);
 
  tempagg(eba,'petrol')$(ebval(eba,'petrol')+ebval(eba,'diesel')+sum(lfuelo,ebval(eba,lfuelo)))
                  =ebval(eba,'petrol')/(ebval(eba,'petrol')+ebval(eba,'diesel')+sum(lfuelo,ebval(eba,lfuelo)));
@@ -276,7 +362,8 @@ Parameter
                  =ebval(eba,'diesel')/(ebval(eba,'petrol')+ebval(eba,'diesel')+sum(lfuelo,ebval(eba,lfuelo)));
  tempagg(eba,'other')$(ebval(eba,'petrol')+ebval(eba,'diesel')+sum(lfuelo,ebval(eba,lfuelo)))
                   =sum(lfuelo,ebval(eba,lfuelo))/(ebval(eba,'petrol')+ebval(eba,'diesel')+sum(lfuelo,ebval(eba,lfuelo)));
-*atrl_f includes atrl_p
+
+*atrl_f includes atrl_p - atrl is combined
  tempagg('atrl_f','petrol')
                  =(ebval('atrl_f','petrol')+ebval('atrl_p','petrol'))
          /(ebval('atrl_f','petrol')+ebval('atrl_f','diesel')+sum(lfuelo,ebval('atrl_f',lfuelo)+ebval('atrl_p',lfuelo))
@@ -295,6 +382,19 @@ Parameter
  tempagg('atrl_p','diesel')=0;
  tempagg('atrl_p','other')=0;
 
+ tempagg('imp','petrol')=ebval('imp','petrol')/(ebval('imp','petrol')+ebval('imp','diesel')+sum(lfuelo,ebval('imp',lfuelo)));
+ tempagg('imp','diesel')=ebval('imp','diesel')/(ebval('imp','petrol')+ebval('imp','diesel')+sum(lfuelo,ebval('imp',lfuelo)));
+ tempagg('imp','other ')=sum(lfuelo,ebval('imp',lfuelo))/(ebval('imp','petrol')+ebval('imp','diesel')+sum(lfuelo,ebval('imp',lfuelo)));
+
+ tempagg('exp','petrol')=ebval('exp','petrol')/(ebval('exp','petrol')+ebval('exp','diesel')+sum(lfuelo,ebval('exp',lfuelo)));
+ tempagg('exp','diesel')=ebval('exp','diesel')/(ebval('exp','petrol')+ebval('exp','diesel')+sum(lfuelo,ebval('exp',lfuelo)));
+ tempagg('exp','other ')=sum(lfuelo,ebval('exp',lfuelo))/(ebval('exp','petrol')+ebval('exp','diesel')+sum(lfuelo,ebval('exp',lfuelo)));
+
+*Used later
+ tempagg2('atrl_f','petrol')=ebval('atrl_f','petrol')/(ebval('atrl_f','petrol')+ebval('atrl_f','diesel'));
+ tempagg2('atrl_p','petrol')=ebval('atrl_p','petrol')/(ebval('atrl_p','petrol')+ebval('atrl_p','diesel'));
+
+$ontext
  tempagg('imp','petrol')=(eimp('petrol')*PFUEL('petrol'))
                    /(eimp('petrol')*PFUEL('petrol')+eimp('diesel')*PFUEL('diesel')+eimp('lpg')*PFUEL('lpg')+eimp('hfo')*PFUEL('hfo')+eimp('jet_par')*PFUEL('jet_par'));
  tempagg('imp','diesel')=(eimp('diesel')*PFUEL('diesel'))
@@ -308,26 +408,33 @@ Parameter
                   /(eexp('petrol')*PFUEL('petrol')+eexp('diesel')*PFUEL('diesel')+eexp('lpg')*PFUEL('lpg')+eexp('hfo')*PFUEL('hfo')+eexp('jet_par')*PFUEL('jet_par'));
  tempagg('exp','other') =(eexp('lpg')*PFUEL('lpg')+eexp('hfo')*PFUEL('hfo')+eexp('jet_par')*PFUEL('jet_par'))
                  /(eexp('petrol')*PFUEL('petrol')+eexp('diesel')*PFUEL('diesel')+eexp('lpg')*PFUEL('lpg')+eexp('hfo')*PFUEL('hfo')+eexp('jet_par')*PFUEL('jet_par'));
+$offtext
 
- ASAM('cref_p',AGGAC)=ASAM('cref',AGGAC)*SUM(EBA$MECAGGAC(EBA,AGGAC),tempagg(eba,'petrol'));
- ASAM('cref_d',AGGAC)= ASAM('cref',AGGAC)*SUM(EBA$MECAGGAC(EBA,AGGAC),tempagg(eba,'diesel'));
+ ASAM('cref_p',AGGAC) = ASAM('cref',AGGAC)*SUM(EBA$MECAGGAC(EBA,AGGAC),tempagg(eba,'petrol'));
+ ASAM('cref_d',AGGAC) = ASAM('cref',AGGAC)*SUM(EBA$MECAGGAC(EBA,AGGAC),tempagg(eba,'diesel'));
  ASAM('cref_o',AGGAC) = ASAM('cref',AGGAC)*SUM(EBA$MECAGGAC(EBA,AGGAC),tempagg(eba,'other'));
 
- ASAM('cref_p','atrl')=ASAM('cref','atrl')*tempagg('atrl_f','petrol');
- ASAM('cref_d','atrl')=ASAM('cref','atrl')*tempagg('atrl_f','diesel');
- ASAM('cref_o','atrl')=ASAM('cref','atrl')*tempagg('atrl_f','other');
+ ASAM('cref_p','atrl')= ASAM('cref','atrl')*tempagg('atrl_f','petrol');
+ ASAM('cref_d','atrl')= ASAM('cref','atrl')*tempagg('atrl_f','diesel');
+ ASAM('cref_o','atrl')= ASAM('cref','atrl')*tempagg('atrl_f','other');
 
 *households
-*share calculation uses economy-wide price estimated in aggregate section to get volume shares right
- ASAM('cref_p',HAGG)=ASAM('cref',HAGG)*(SUM(EBA$MECAGGAC(EBA,HAGG),tempagg(eba,'petrol')));
- ASAM('cref_d',HAGG)=ASAM('cref',HAGG)*(SUM(EBA$MECAGGAC(EBA,HAGG),tempagg(eba,'diesel')));
- ASAM('cref_o',HAGG)=ASAM('cref',HAGG)*(SUM(EBA$MECAGGAC(EBA,HAGG),tempagg(eba,'other')));
+*can't use code below as doesn't match to SAM household group consumption
+* ASAM('cref_p',HAGG)=ASAM('cref',HAGG)*(SUM(EBA$MECAGGAC(EBA,HAGG),tempagg(eba,'petrol')));
+* ASAM('cref_d',HAGG)=ASAM('cref',HAGG)*(SUM(EBA$MECAGGAC(EBA,HAGG),tempagg(eba,'diesel')));
+* ASAM('cref_o',HAGG)=ASAM('cref',HAGG)*(SUM(EBA$MECAGGAC(EBA,HAGG),tempagg(eba,'other')));
 
 *exports
- ASAM('cref_p','row')=ASAM('cref','row')*tempagg('exp','petrol');
- ASAM('cref_d','row')=ASAM('cref','row')*tempagg('exp','diesel');
- ASAM('cref_o','row')=ASAM('cref','row')*tempagg('exp','other');
+*use actual ebvals as was scaled down before
+* ASAM('cref_p','row')=ASAM('cref','row')*tempagg('exp','petrol');
+* ASAM('cref_d','row')=ASAM('cref','row')*tempagg('exp','diesel');
+* ASAM('cref_o','row')=ASAM('cref','row')*tempagg('exp','other');
 
+ ASAM('cref_p','row')= ebval('exp','petrol');
+ ASAM('cref_d','row')= ebval('exp','diesel');
+ ASAM('cref_o','row')= (sum(fuel,ebval('exp',fuel))-ebval('exp','diesel')-ebval('exp','petrol'));
+
+*not valid in aggregate form due to shift above
 *investment split according to aoin
  ASAM('cref_p','s-i')
          = ASAM('cref','s-i')*(ASAM('cref_p','aoin')/ASAM('cref','aoin'));
@@ -343,9 +450,9 @@ Parameter
  ASAM('mtax','cref_d') = ASAM('mtax' ,'cref')*tempagg('imp','diesel');
  ASAM('mtax','cref_o') = ASAM('mtax' ,'cref')*tempagg('imp','other');
 
- ASAM('row','cref_p')  = ASAM('row' ,'cref')*tempagg('exp','petrol');
- ASAM('row','cref_d')  = ASAM('row' ,'cref')*tempagg('exp','diesel');
- ASAM('row','cref_o')  = ASAM('row' ,'cref')*tempagg('exp','other');
+ ASAM('row','cref_p')  = ASAM('row' ,'cref')*tempagg('imp','petrol');
+ ASAM('row','cref_d')  = ASAM('row' ,'cref')*tempagg('imp','diesel');
+ ASAM('row','cref_o')  = ASAM('row' ,'cref')*tempagg('imp','other');
 
  ASAM('stax','cref_p') = sum(AGGACNT,ASAM('cref_p',AGGACNT))*(ASAM('stax','cref')/sum(AGGACNT,ASAM('cref',AGGACNT)));
  ASAM('stax','cref_d') = sum(AGGACNT,ASAM('cref_d',AGGACNT))*(ASAM('stax','cref')/sum(AGGACNT,ASAM('cref',AGGACNT)));
@@ -402,6 +509,51 @@ Parameter
 
  IPFUEL2('cref_o')$sum((EBA,LFUELO),EDEM(EBA,LFUELO))
          =((sum(AGG,ASAM('cref_o',AGG))+ASAM('cref_o','h1')+ASAM('cref_o','h2')+ASAM('cref_o','h3')))/sum((EBA,LFUELO),EDEM(EBA,LFUELO))*1000000;
+$ontext
+*Splitting ASAM to get SAM - can't do this:
+*1. subtracting labour and vehicle purchases - can't isolate vehicles as in other industry
+Parameter
+ SAM_AGG(aggac,aggac)
+ SAM_SHR(ac,ac)
+ SAM_NEW(ac,ac)
+
+ test(aggac,ac)
+ test2(ac,ac)
+ test3(ac,ac)
+ test4(ac,ac)
+ test5(ac,aggac)
+ test6(aggac,aggac)
+ test7(ac,ac)
+;
+
+set
+ CREF(CAGG) /cref_p, cref_d, cref_o/
+ CPETR(C) /cpetr_p, cpetr_d, cpetr_o/
+;
+
+Alias (cref,crefp);
+
+ MAGGAC('cpetr_p','cref_p')=YES;
+ MAGGAC('cpetr_d','cref_d')=YES;
+ MAGGAC('cpetr_o','cref_o')=YES;
+
+ test(aggacnt,ac)=sum(aggacp$maggac(ac,aggacp),ASAM(aggacnt,aggacp));
+ test2(ac,acnt)=sum(aggacp$maggac(ac,aggacp),test(aggacp,acnt))*1000;
+
+ test5(ac,aggac)= sum(acp$maggac(acp,aggac),SAM(ac,acp));
+
+ SAM_AGG(aggac,aggacp)=sum((ac,acp)$(maggac(acp,aggacp) and maggac(ac,aggac)),SAM(ac,acp));
+ SAM_SHR(ac,acp)$sum((aggac,aggacp)$(maggac(ac,aggac)and maggac(acp,aggacp)),SAM_AGG(aggac,aggacp))
+                      =SAM(ac,acp)/sum((aggac,aggacp)$(maggac(ac,aggac)and maggac(acp,aggacp)),SAM_AGG(aggac,aggacp));
+
+ test6(aggac,cref)$sum(crefp,ASAM(aggac,crefp))=ASAM(aggac,cref)/sum(crefp,ASAM(aggac,crefp));
+
+ test7(cpetr,ac)
+          = SAM_SHR('cpetr',AC)*sum((cref,aggac)$(MAGGAC(cpetr,cref) and MAGGAC(ac,aggac)),(ASAM(cref,aggac)/sum(crefp,ASAM(crefp,aggac))));
+* test7(ac,cpetr)=sum((cref,aggac)$(MAGGAC(cpetr,cref) and MAGGAC(ac,aggac)),(ASAM(cref,aggac)/sum(crefp,ASAM(crefp,aggac))));
+
+ SAM_NEW(ac,acp)= SAM_SHR(ac,acp)*(sum((aggac,aggacp)$(maggac(ac,aggac)and maggac(acp,aggacp)),ASAM(aggac,aggacp)))*1000;
+$offtext
 
 *--------------------------------------------------------------------------------------------
 *6. Disaggregate SAM - transport values
@@ -413,7 +565,7 @@ Parameter
  trvshr(a)                         share for splitting liquid fuels from aggregated SAM - activities
  trvhshr(h)                        share for splitting liquid fuels from aggregated SAM - households
  trvh(ac,h)                        values to be extracted from households
- scalar2 /0.01/
+ scalar4 /0.01/
 ;
 
 *Calculating consumption shares of land transport sector
@@ -429,17 +581,19 @@ Parameter
 *relative to trshr
  trshr2(acnt)= trshr2(acnt)/trshr2('cpetr');
 *dampened to avoid negative values in SAM (smaller than before due to bchm, ochm, bsrv)
- trshr2('flab-p')=trshr2('flab-p')*scalar2;
- trshr2('flab-m')=trshr2('flab-m')*scalar2;
- trshr2('flab-s')=trshr2('flab-s')*scalar2;
- trshr2('flab-t')=trshr2('flab-t')*scalar2;
+ trshr2('flab-p')=trshr2('flab-p')*scalar4;
+ trshr2('flab-m')=trshr2('flab-m')*scalar4;
+ trshr2('flab-s')=trshr2('flab-s')*scalar4;
+ trshr2('flab-t')=trshr2('flab-t')*scalar4;
  trshr2('cpetr')=1;
 
  trvshr(a)$sum(agg$MAGG(a,agg),sum(ap$MAGG(ap,agg),SAM('cpetr',ap)))=SAM('cpetr',a)/sum(agg$MAGG(a,agg),sum(ap$MAGG(ap,agg),SAM('cpetr',ap)));
  trvac('cpetr',a)=(sum(agg$MAGG(a,agg),trvaggac('cref',agg))*trvshr(a))*1000;
- trvac('cpetr','atrps')=SAM('cpetr','atrps');
+*FH to check this again
+* trvac('cpetr','atrps')=SAM('cpetr','atrps');
 
  trvac(ac,a)$SAM(ac,a)= trvac('cpetr',a)*trshr2(ac);
+*not necessary as values already 0
  trvac(ac,'altrp')=0;
  trvac(ac,'awtrp')=0;
  trvac(ac,'aatrp')=0;
@@ -467,11 +621,55 @@ Parameter
 *Increasing production of land transport
  SAM('altrp','cftrp')=SAM('altrp','cftrp')+sum((ac,a),trvac(ac,a));
  SAM('altrp','cptrp')=SAM('altrp','cptrp')+sum((ac,h),trvh(ac,h));
+*-------------------------------------------------------------------------------
+*this code may not be needed in other versions - need to check first
+*replacing mining, food&bev and elec to match eb consumption
+*can't share equally across mining as freight use by amore becomes negative
+set
+mine(a) /acoal, agold, amore, amine/
+fbev(a) /afood, abevt/;
 
+alias (mine,minep), (fbev,fbevp);
+
+parameter
+ enerval(ac,ac)
+;
+
+ enerval('cpetr',fbev) = (SAM('cpetr',fbev)/sum(fbevp,SAM('cpetr',fbevp)))*sum(aggac$MAGGAC(fbev,aggac),(ASAM('cref_d','afab')+ASAM('cref_p','afab')+ASAM('cref_o','afab'))*1000);
+ enerval('cpetr','aelec') = ((ASAM('cref_d','aelc')+ASAM('cref_p','aelc')+ASAM('cref_o','aelc'))*1000);
+
+ SAM('cftrp',fbev)=SAM('cftrp',fbev)-(enerval('cpetr',fbev)-SAM('cpetr',fbev));
+
+ SAM('cftrp','aelec')=SAM('cftrp','aelec')-(enerval('cpetr','aelec')-SAM('cpetr','aelec'));
+
+ SAM('altrp','cftrp')=SAM('altrp','cftrp')
+                     - sum(fbev,(enerval('cpetr',fbev)-SAM('cpetr',fbev)))
+                     - (enerval('cpetr','aelec')-SAM('cpetr','aelec'));
+
+ SAM('cpetr','altrp')=SAM('cpetr','altrp')
+                     - sum(fbev,(enerval('cpetr',fbev)-SAM('cpetr',fbev)))
+                     - (enerval('cpetr','aelec')-SAM('cpetr','aelec'));
+
+ SAM('cpetr',fbev)   = enerval('cpetr',fbev)   ;
+ SAM('cpetr','aelec')= enerval('cpetr','aelec');
+
+* do the same for household liquid fuel consumption due to SAM/eb discrepencies
+* use household demand for passenger transport as the balancing item
+ enerval('cpetr',h)=(SAM('cpetr',h)/sum(hagg$MHAGG(h,hagg),sum(hp$MHAGG(hp,hagg),SAM('cpetr',hp))))
+                   *sum(hagg$MAGGAC(h,hagg),(ASAM('cref_d',hagg)+ASAM('cref_p',hagg)+ASAM('cref_o',hagg))*1000);
+
+ SAM('cptrp',h)=SAM('cptrp',h)-(enerval('cpetr',h)-SAM('cpetr',h));
+ SAM('altrp','cptrp')=SAM('altrp','cptrp')-sum(h,(enerval('cpetr',h)-SAM('cpetr',h)));
+ SAM('cpetr','altrp')=SAM('cpetr','altrp')-sum(h,(enerval('cpetr',h)-SAM('cpetr',h)));
+ SAM('cpetr',h)= enerval('cpetr',h);
+*-------------------------------------------------------------------------------
  SAMBALCHK1(ACNT)=SUM(ACNTP,SAM(ACNT,ACNTP))-SUM(ACNTP,SAM(ACNTP,ACNT));
  DISPLAY SAMBALCHK1;
 
-*Shift all other industry consumption into construction
+*FH to chat with Bruno
+*Shift all other industry consumption into construction. The ERC energy balance
+*does not provide a split for this. The DoE energy balance only reports for
+*construction and no other sector.
 Parameter
 Temp2(c,a);
 
@@ -479,7 +677,6 @@ Temp2(c,a);
  Temp2('ccons',a)=SAM('ccons',a);
 
  Temp2('cpetr','acons')=sum(agg$MAGG('acons',agg),sum(ap$MAGG(ap,agg),SAM('cpetr',ap)));
-
  SAM('acons','ccons')=SAM('acons','ccons')+(Temp2('cpetr','acons')-SAM('cpetr','acons'));
 
  SAM('cpetr',a)$(MAGG(a,'aoin'))=0;
@@ -529,8 +726,45 @@ Temp2(c,a);
 *incleude three refinery products (diesel, petrol and other) handling the consumption side (rows)
 *activities
 Parameter
- temp(eba,*);
+* temp(eba,*)
+ temp(aggac,*)
+;
 
+ temp(aggac,'petrol')$(ASAM('cref_p',aggac)+ASAM('cref_d',aggac)+ASAM('cref_o',aggac))
+                         =ASAM('cref_p',aggac)/(ASAM('cref_p',aggac)+ASAM('cref_d',aggac)+ASAM('cref_o',aggac));
+ temp('s-i','petrol')=temp('aoin','petrol');
+
+ temp(aggac,'diesel')$(ASAM('cref_p',aggac)+ASAM('cref_d',aggac)+ASAM('cref_o',aggac))
+                         =ASAM('cref_d',aggac)/(ASAM('cref_p',aggac)+ASAM('cref_d',aggac)+ASAM('cref_o',aggac));
+ temp('s-i','diesel')=temp('aoin','diesel');
+
+ temp(aggac,'other')$(ASAM('cref_p',aggac)+ASAM('cref_d',aggac)+ASAM('cref_o',aggac))
+                         =ASAM('cref_o',aggac)/(ASAM('cref_p',aggac)+ASAM('cref_d',aggac)+ASAM('cref_o',aggac));
+ temp('s-i','other')=temp('aoin','other');
+
+ SAM('cpetr_p',ac) = SAM('cpetr',ac)*sum(aggac$MAGGAC(ac,aggac),temp(aggac,'petrol'));
+ SAM('cpetr_d',ac) = SAM('cpetr',ac)*sum(aggac$MAGGAC(ac,aggac),temp(aggac,'diesel'));
+ SAM('cpetr_o',ac) = SAM('cpetr',ac)*sum(aggac$MAGGAC(ac,aggac),temp(aggac,'other'));
+
+*handling the production side (columns)
+*imports and associated taxes are based on shares of estimated energy balance values of imports
+ SAM('row','cpetr_p')  = (ASAM('row','cref_p')/(ASAM('row','cref_p')+ASAM('row','cref_d')+ASAM('row','cref_o')))*SAM('row','cpetr');
+ SAM('row','cpetr_d')  = (ASAM('row','cref_d')/(ASAM('row','cref_p')+ASAM('row','cref_d')+ASAM('row','cref_o')))*SAM('row','cpetr');
+ SAM('row','cpetr_o')  = (ASAM('row','cref_o')/(ASAM('row','cref_p')+ASAM('row','cref_d')+ASAM('row','cref_o')))*SAM('row','cpetr');
+
+ SAM('mtax','cpetr_p') = (ASAM('mtax','cref_p')/(ASAM('mtax','cref_p')+ASAM('mtax','cref_d')+ASAM('mtax','cref_o')))*SAM('mtax','cpetr');
+ SAM('mtax','cpetr_d') = (ASAM('mtax','cref_d')/(ASAM('mtax','cref_p')+ASAM('mtax','cref_d')+ASAM('mtax','cref_o')))*SAM('mtax','cpetr');
+ SAM('mtax','cpetr_o') = (ASAM('mtax','cref_o')/(ASAM('mtax','cref_p')+ASAM('mtax','cref_d')+ASAM('mtax','cref_o')))*SAM('mtax','cpetr');
+
+ SAM('stax','cpetr_p') = (ASAM('stax','cref_p')/(ASAM('stax','cref_p')+ASAM('stax','cref_d')+ASAM('stax','cref_o')))*SAM('stax','cpetr');
+ SAM('stax','cpetr_d') = (ASAM('stax','cref_d')/(ASAM('stax','cref_p')+ASAM('stax','cref_d')+ASAM('stax','cref_o')))*SAM('stax','cpetr');
+ SAM('stax','cpetr_o') = (ASAM('stax','cref_o')/(ASAM('stax','cref_p')+ASAM('stax','cref_d')+ASAM('stax','cref_o')))*SAM('stax','cpetr');
+
+ SAM('trc','cpetr_p') = (ASAM('trc','cref_p')/(ASAM('trc','cref_p')+ASAM('trc','cref_d')+ASAM('trc','cref_o')))*SAM('trc','cpetr');
+ SAM('trc','cpetr_d') = (ASAM('trc','cref_d')/(ASAM('trc','cref_p')+ASAM('trc','cref_d')+ASAM('trc','cref_o')))*SAM('trc','cpetr');
+ SAM('trc','cpetr_o') = (ASAM('trc','cref_o')/(ASAM('trc','cref_p')+ASAM('trc','cref_d')+ASAM('trc','cref_o')))*SAM('trc','cpetr');
+
+$ontext
  temp(eba,'petrol')$(edem(eba,'petrol')*IPFUEL2('cref_p')+edem(eba,'diesel')*IPFUEL2('cref_d')+sum(LFUELO,edem(eba,LFUELO))*IPFUEL2('cref_o'))
          =(edem(eba,'petrol')*IPFUEL2('cref_p'))/(edem(eba,'petrol')*IPFUEL2('cref_p')+edem(eba,'diesel')*IPFUEL2('cref_d')+sum(LFUELO,edem(eba,LFUELO))*IPFUEL2('cref_o'));
  temp(eba,'diesel')$(edem(eba,'petrol')*IPFUEL2('cref_p')+edem(eba,'diesel')*IPFUEL2('cref_d')+sum(LFUELO,edem(eba,LFUELO))*IPFUEL2('cref_o'))
@@ -613,6 +847,7 @@ Parameter
  SAM('trc','cpetr_p') = sum(ACNT,SAM('cpetr_p',ACNT))*(SAM('trc','cpetr')/sum(ACNT,SAM('cpetr',ACNT)));
  SAM('trc','cpetr_d') = sum(ACNT,SAM('cpetr_d',ACNT))*(SAM('trc','cpetr')/sum(ACNT,SAM('cpetr',ACNT)));
  SAM('trc','cpetr_o') = sum(ACNT,SAM('cpetr_o',ACNT))*(SAM('trc','cpetr')/sum(ACNT,SAM('cpetr',ACNT)));
+$offtext
 
 *calculating production of each liquid fuel commodity
  SAM('apetr','cpetr_p') = SUM(ACNT,SAM('cpetr_p',ACNT))-(SAM('row','cpetr_p')
@@ -633,11 +868,100 @@ Parameter
  SAMBALCHK1(ACNT)=SUM(ACNTP,SAM(ACNT,ACNTP))-SUM(ACNTP,SAM(ACNTP,ACNT));
  DISPLAY SAMBALCHK1;
 
-*Create single production sectors for each type of transport
+*Land transport survey (statssa) and energy balance fuel volumes suggest that production of passenger transport
+*is ~10% of the sum of passenger + freight. the sut suggests ~40%. the sam is therefore adjusted such that no sector
+*consumes passenger transport which takes us closer to the 10%.
 
+ SAM('cftrp',a)          =SAM('cftrp',a)+SAM('cptrp',a);
+ SAM('altrp','cftrp')    =SAM('altrp','cftrp')+sum(a,SAM('cptrp',a));
+ SAM('altrp','cptrp')    =SAM('altrp','cptrp')-sum(a,SAM('cptrp',a));
+ SAM('cptrp',a)=0;
+
+ SAM(AC,'TOTAL')=SUM(ACNTP,SAM(ACNTP,AC));
+ SAM('TOTAL',AC)=SUM(ACNTP,SAM(AC,ACNTP));
+
+ SAMBALCHK1(ACNT)=SUM(ACNTP,SAM(ACNT,ACNTP))-SUM(ACNTP,SAM(ACNTP,ACNT));
+ DISPLAY SAMBALCHK1;
+
+*Single sector/commodity transport
+
+ SAM('total',AC)=0;
+ SAM(AC,'total')=0;
+
+set
+ acna(ac);
+
+ acna(ac)=no;
+ acna('stax')=yes;
+ acna('mtax')=yes;
+ acna('trc') =yes;
+ acna('row') =yes;
+
+ SAM('altrp-p','cptrp-l')=SAM('altrp','cptrp');
+ SAM('altrp-f','cftrp-l')=SAM('altrp','cftrp');
+
+ SAM('awtrp','cptrp-o')=SAM('awtrp','cptrp');
+ SAM('awtrp','cftrp-o')=SAM('awtrp','cftrp');
+ SAM('aatrp','cptrp-o')=SAM('aatrp','cptrp');
+ SAM('aatrp','cftrp-o')=SAM('aatrp','cftrp');
+
+ SAM(ac,'altrp-p')=SAM(ac,'altrp')*(SAM('altrp','cptrp')/(SAM('altrp','cptrp')+SAM('altrp','cftrp')));
+ SAM(ac,'altrp-f')=SAM(ac,'altrp')*(SAM('altrp','cftrp')/(SAM('altrp','cptrp')+SAM('altrp','cftrp')));
+
+* SAM(ac,'awtrp-p')=SAM(ac,'awtrp')*(SAM('awtrp','cptrp')/(SAM('awtrp','cptrp')+SAM('awtrp','cftrp')));
+* SAM(ac,'awtrp-f')=SAM(ac,'awtrp')*(SAM('awtrp','cftrp')/(SAM('awtrp','cptrp')+SAM('awtrp','cftrp')));
+* SAM(ac,'aatrp-p')=SAM(ac,'aatrp')*(SAM('aatrp','cptrp')/(SAM('aatrp','cptrp')+SAM('aatrp','cftrp')));
+* SAM(ac,'aatrp-f')=SAM(ac,'aatrp')*(SAM('aatrp','cftrp')/(SAM('aatrp','cptrp')+SAM('aatrp','cftrp')));
+
+ SAM(acna,'cptrp-l')=SAM(acna,'cptrp')*(SAM('altrp-p','cptrp-l')/(SAM('altrp-p','cptrp-l')+SAM('awtrp-p','cptrp-o')+SAM('awtrp-p','cptrp-o')));
+ SAM(acna,'cptrp-o')=SAM(acna,'cptrp')-SAM(acna,'cptrp-l');
+
+ SAM(acna,'cftrp-l')=SAM(acna,'cftrp')*(SAM('altrp-f','cftrp-l')/(SAM('altrp-f','cftrp-l')+SAM('awtrp-f','cftrp-o')+SAM('awtrp-f','cftrp-o')));
+ SAM(acna,'cftrp-o')=SAM(acna,'cftrp')-SAM(acna,'cftrp-l');
+
+ SAM('altrp',ac)=0;
+ SAM(ac,'altrp')=0;
+* SAM('awtrp',ac)=0;
+* SAM(ac,'awtrp')=0;
+* SAM('aatrp',ac)=0;
+* SAM(ac,'aatrp')=0;
+
+ SAM('cptrp-l',ac)=(SAM('cptrp',ac)/sum(acp,SAM('cptrp',acp)))*sum(acnt,SAM(acnt,'cptrp-l'));
+ SAM('cptrp-o',ac)=(SAM('cptrp',ac)/sum(acp,SAM('cptrp',acp)))*sum(acnt,SAM(acnt,'cptrp-o'));
+
+ SAM('cftrp-l',ac)=(SAM('cftrp',ac)/sum(acp,SAM('cftrp',acp)))*sum(acnt,SAM(acnt,'cftrp-l'));
+ SAM('cftrp-o',ac)=(SAM('cftrp',ac)/sum(acp,SAM('cftrp',acp)))*sum(acnt,SAM(acnt,'cftrp-o'));
+
+ SAM(ac,'cptrp')=0;
+ SAM(ac,'cftrp')=0;
+ SAM('cptrp',ac)=0;
+ SAM('cftrp',ac)=0;
+
+parameter
+ store(ac);
+
+ store('altrp-p') = SAM('cpetr_p','altrp-p')+SAM('cpetr_d','altrp-p');
+ store('altrp-f') = SAM('cpetr_p','altrp-f')+SAM('cpetr_d','altrp-f');
+
+
+ SAM('cpetr_p','altrp-p')=tempagg2('atrl_p','petrol')*store('altrp-p');
+ SAM('cpetr_d','altrp-p')=(1-tempagg2('atrl_p','petrol'))*store('altrp-p');
+
+ SAM('cpetr_p','altrp-f')=tempagg2('atrl_f','petrol')*store('altrp-f');
+ SAM('cpetr_d','altrp-f')=(1-tempagg2('atrl_f','petrol'))*store('altrp-f');
+
+ SAMBALCHK1(ACNT)=SUM(ACNTP,SAM(ACNT,ACNTP))-SUM(ACNTP,SAM(ACNTP,ACNT));
+
+ SAM('apetr','cpetr_p')=SAM('apetr','cpetr_p')+SAMBALCHK1('cpetr_p');
+ SAM('apetr','cpetr_d')=SAM('apetr','cpetr_d')+SAMBALCHK1('cpetr_d');
+
+ SAMBALCHK1(ACNT)=SUM(ACNTP,SAM(ACNT,ACNTP))-SUM(ACNTP,SAM(ACNTP,ACNT));
+
+$ontext
+*Create single production sectors for each type of transport
 Parameter
  trnshr(c)       transport shares for splitting imports and sales taxes
- htrnshr(c,ac)       shares for splitting consumption
+ htrnshr(c,ac)   shares for splitting consumption
 ;
 
  trnshr('cptrp')=(SAM('cptrp','altrp')/(SAM('cptrp','altrp')+SAM('cptrp','awtrp')+SAM('cptrp','aatrp-p')));
@@ -646,23 +970,23 @@ Parameter
  SAM('altrp-p','cptrp')=SAM('altrp','cptrp');
  SAM('altrp-f','cftrp')=SAM('altrp','cftrp');
 
-* SAM('awtrp-p','cptrp')=SAM('awtrp','cptrp');
-* SAM('awtrp-f','cftrp')=SAM('awtrp','cftrp');
-
-* SAM('aatrp-p','cptrp')=SAM('aatrp','cptrp');
-* SAM('aatrp-f','cftrp')=SAM('aatrp','cftrp');
-
  SAM(ac,'altrp-p')=SAM(ac,'altrp')*(SAM('altrp','cptrp')/(SAM('altrp','cptrp')+SAM('altrp','cftrp')));
  SAM(ac,'altrp-f')=SAM(ac,'altrp')*(SAM('altrp','cftrp')/(SAM('altrp','cptrp')+SAM('altrp','cftrp')));
 
- SAM('cpetr_p','altrp-f')=(edem('atrl_f','petrol')*ipfuel2('cref_p'))/1000;
- SAM('cpetr_d','altrp-f')=(edem('atrl_f','diesel')*ipfuel2('cref_d'))/1000;
+* SAM('cpetr_p','altrp-f')=(edem('atrl_f','petrol')*ipfuel2('cref_p'))/1000;
+* SAM('cpetr_d','altrp-f')=(edem('atrl_f','diesel')*ipfuel2('cref_d'))/1000;
 
- SAM('cpetr_p','altrp-p')=SAM('cpetr_p','altrp')-SAM('cpetr_p','altrp-f');
- SAM('cpetr_d','altrp-p')=SAM('cpetr_d','altrp')-SAM('cpetr_d','altrp-f');
+ SAM('cpetr_p','altrp-p')=(edem('atrl_p','petrol')*ipfuel2('cref_p'))/1000;
+ SAM('cpetr_d','altrp-p')=(edem('atrl_p','diesel')*ipfuel2('cref_d'))/1000;
+
+* SAM('cpetr_p','altrp-p')=SAM('cpetr_p','altrp')-SAM('cpetr_p','altrp-f');
+* SAM('cpetr_d','altrp-p')=SAM('cpetr_d','altrp')-SAM('cpetr_d','altrp-f');
+
+ SAM('cpetr_p','altrp-f')=SAM('cpetr_p','altrp')-SAM('cpetr_p','altrp-p');
+ SAM('cpetr_d','altrp-f')=SAM('cpetr_d','altrp')-SAM('cpetr_d','altrp-p');
 
  SAMBALCHK1(ACNT)=SUM(ACNTP,SAM(ACNT,ACNTP))-SUM(ACNTP,SAM(ACNTP,ACNT));
-
+*$exit
 *FH 270219 matching freight fuel use to eb
 *NB: Need to generalise this if conditions are different. Need to think about how to do this
  if((SAMBALCHK1('altrp-p') lt 0) and ((SAM('cptrp','altrp-p')+SAM('cftrp','altrp-p')) lt abs(SAMBALCHK1('altrp-p'))),
@@ -752,7 +1076,7 @@ Parameter
  SAM('TOTAL',AC)=SUM(ACNTP,SAM(AC,ACNTP));
 
  SAMBALCHK1(ACNT)=SUM(ACNTP,SAM(ACNT,ACNTP))-SUM(ACNTP,SAM(ACNTP,ACNT));
-
+$offtext
 *FH 10/05/2019
 *Shift electricity sector's coal transport costs to the electricity sector only by reducing trc on ccoal.
 *Target value is R5.45 billion. We assume that there is no transport coal transport for Sasol.
@@ -815,7 +1139,7 @@ Parameter
  LFPRICE('cpetr_d','exp')=SAM('cpetr_d','row')/eexp('diesel');
  LFPRICE('cpetr_o','exp')=SAM('cpetr_o','row')/(sum(lfuelo,eexp(lfuelo)));
 
- LFPRICE('cpetr_p','imp')=SAM('row','cpetr_p')/eimp('petrol');
+* LFPRICE('cpetr_p','imp')=SAM('row','cpetr_p')/eimp('petrol');
  LFPRICE('cpetr_d','imp')=SAM('row','cpetr_d')/eimp('diesel');
  LFPRICE('cpetr_o','imp')=SAM('row','cpetr_o')/(sum(lfuelo,eimp(lfuelo)));
 
@@ -925,3 +1249,4 @@ IF(XLTEST = 2,
 execute 'xlstalk.exe -s %energy2%';
 );
 execute 'gdxxrw.exe i=energy2.gdx o=%energy2% index=index!a2';
+*$offtext

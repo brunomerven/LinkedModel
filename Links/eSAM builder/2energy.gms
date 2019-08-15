@@ -371,7 +371,7 @@ Set
          XPRICE('CNGAS','DEMD')*SUM(EBAC$MEA(EBAC,ACNT), EBAL(EBAC,'ANGAS'))
    * SAM('CMINE',ACNT) / SUM((EBAC,ACNTP)$(MEA(EBAC,ACNT) AND MEA(EBAC,ACNTP)), SAM('CMINE',ACNTP));
 
-*FH!Issues with subtracting cngas from amine. Use stocks to assist. Essentially shiting other mining stocks
+*FH!Issues with subtracting cngas from amine. Use stocks to assist. Essentially shifting other mining stocks
 *to respecctive sectors
 
  Parameter
@@ -428,12 +428,14 @@ Set
 *-------------------------------------------------------------------------------
 * STEP 3: Petrol and electricity
 * ------------------------------------------------------------------------------
+$ontext
 *3.1: Petrol ------------------------
 SET
- EDEMA(*) /aaff, amin, afab, aoin, apap, airo, acom, atra, atrl_p, atrl_f, h1, h2, h3/
+ EDEMA(EBAC) /aaff, amin, afab, aoin, apap, airo, acom, atra, atrl_p, atrl_f, h1, h2, h3/
 ;
 
 PARAMETER
+* APETRSHR(EDEMA,CPETRPR)
  APETRSHR(CPETRPR)
 ;
 
@@ -463,15 +465,34 @@ ALIAS (AE,AEP), (AF,AFP);
  APETRSHR('CPETR_P')=SUM(EDEMA,EFUEL(EDEMA,'PETROL'))/SUM(EDEMA,EFUEL(EDEMA,'PETROL')+EFUEL(EDEMA,'DIESEL')+EFUEL(EDEMA,'OTHER'));
  APETRSHR('CPETR_D')=SUM(EDEMA,EFUEL(EDEMA,'DIESEL'))/SUM(EDEMA,EFUEL(EDEMA,'PETROL')+EFUEL(EDEMA,'DIESEL')+EFUEL(EDEMA,'OTHER'));
  APETRSHR('CPETR_O')=SUM(EDEMA,EFUEL(EDEMA,'OTHER'))/SUM(EDEMA,EFUEL(EDEMA,'PETROL')+EFUEL(EDEMA,'DIESEL')+EFUEL(EDEMA,'OTHER'));
+*$exit
+* APETRSHR(EDEMA,'CPETR_P')=EFUEL(EDEMA,'PETROL')/(EFUEL(EDEMA,'PETROL')+EFUEL(EDEMA,'DIESEL')+EFUEL(EDEMA,'OTHER'));
+* APETRSHR(EDEMA,'CPETR_D')=EFUEL(EDEMA,'DIESEL')/(EFUEL(EDEMA,'PETROL')+EFUEL(EDEMA,'DIESEL')+EFUEL(EDEMA,'OTHER'));
+* APETRSHR(EDEMA,'CPETR_O')=EFUEL(EDEMA,'OTHER') /(EFUEL(EDEMA,'PETROL')+EFUEL(EDEMA,'DIESEL')+EFUEL(EDEMA,'OTHER'));
+
+*$ONTEXT
+parameter
+ cpetrpr_shr(CPETRPR,A)
+ cpetrpr_shrh(CPETRPR,H)
+;
+
+ cpetrpr_shr(CPETRPR,A)$(SUM(EBAC$MEA(EBAC,A),(SUM((AP)$MEA(EBAC,AP),SAM(CPETRPR,AP)))))
+         =SAM(CPETRPR,A)/SUM(EBAC$MEA(EBAC,A),(SUM((AP)$MEA(EBAC,AP),SAM(CPETRPR,AP))));
+ cpetrpr_shrh(CPETRPR,H)
+         =SAM(CPETRPR,H)/SUM(EBAC$MEH(EBAC,H),(SUM((HP)$MEH(EBAC,HP),SAM(CPETRPR,HP))));
+****$OFFTEXT
 
 * All remaining consumers of petroleum (demand spread proportionally based on SAM expenditure values)
  SAM(CPETRPR,UO) = SAM(CPETRPR,UO)/SUM(UOP,SAM(CPETRPR,UOP))*XPRICE(CPETRPR,'DEMD')
          *((EBAL('DEMAND','APETR')-EBAL('AELC','APETR')-EBAL('AREF','APETR'))*APETRSHR(CPETRPR));
+* SAM(CPETRPR,A)=cpetrpr_shr(CPETRPR,A)*SUM(EDEMA$MEA(EDEMA,A),XPRICE(CPETRPR,'DEMD')*(XPRICE(CPETRPR,'DEMD')*((EBAL(EDEMA,'APETR')*APETRSHR(EDEMA,CPETRPR)))));
+* SAM(CPETRPR,H)=cpetrpr_shrh(CPETRPR,H)*SUM(EDEMA$MEH(EDEMA,H),XPRICE(CPETRPR,'DEMD')*(XPRICE(CPETRPR,'DEMD')*((EBAL(EDEMA,'APETR')*APETRSHR(EDEMA,CPETRPR)))));
 
  SAM(ACNT,'TOTAL')=SUM(ACNTP,SAM(ACNTP,ACNT));
  SAM('TOTAL',ACNT)=SUM(ACNTP,SAM(ACNT,ACNTP));
  BALCHCK(ACNT)= SUM(ACNTP, SAM(ACNT,ACNTP)) - SUM(ACNTP, SAM(ACNTP,ACNT));
-
+*$EXIT
+$offtext
 *3.2: Electricity ------------------------
 
 *Production
