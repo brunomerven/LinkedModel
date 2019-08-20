@@ -121,6 +121,9 @@ $offtext
  FLOW_IN_FSFuels(FS,C,TC,TT) = SUM(COM$MCOMC(COM,C),FLOW_IN_FS(FS,COM,TC));
  FLOW_OUT_FSFuels(FS,C,TC,TT) = SUM(COM$MCOMC(COM,C),FLOW_OUT_FS(FS,COM,TC));
 
+ FLOW_OUT_FSFactors(FS,F,TC,TT) = SUM(COM$MCOMF(COM,F),FLOW_OUT_FS(FS,COM,TC));
+
+
 *bm methane rich gas is currently a product of sasol which is accounted for in SATIM, but not in eSAGE so making this zero
  FLOW_OUT_FSFuels('petr','cngas',TC,TT) = 0;
 
@@ -221,7 +224,7 @@ LOOP((PRC,TC)$(TVNCAP(TC,PRC) AND NCAP_ILED('REGION1','2012',PRC) LT 0),
 
 * EFLOW('NAT',XC,TC,TT) = SUM(SUPELE, TVACT(TC,SUPELE))/3.6;
 * !!EFLOW now calculated from flow through transmission. When we include distributed generation we also need to include them in the calc
-ELC_FLOW(RUN,TC) = (TVACT(TC,'XAGRELC') + TVACT(TC,'XCOMELC') +TVACT(TC,'XINDELC') + TVACT(TC,'XRESELC') + TVACT(TC,'XTRAELC') + TVACT(TC,'XUPSELC'));
+ ELC_FLOW(RUN,TC) = (TVACT(TC,'XAGRELC') + TVACT(TC,'XCOMELC') +TVACT(TC,'XINDELC') + TVACT(TC,'XRESELC') + TVACT(TC,'XTRAELC') + TVACT(TC,'XUPSELC'));
 
 *debug test
 *ELC_FLOW(RUN,'2012') = 764.7;
@@ -238,8 +241,8 @@ ELC_FLOW(RUN,TC) = (TVACT(TC,'XAGRELC') + TVACT(TC,'XCOMELC') +TVACT(TC,'XINDELC
 
 
 
-EIntensity_FS('elec',C,TC) = FLOW_IN_FSFuels('elec',C,TC,TT)/ELC_FLOW(RUN,TC);
-EIntensity_FS('hydr',C,TC)$FLOW_OUT_FSFuels('hydr','chydr',TC,TT) = FLOW_IN_FSFuels('hydr',C,TC,TT)/FLOW_OUT_FSFuels('hydr','chydr',TC,TT);
+ EIntensity_FS('elec',C,TC) = FLOW_IN_FSFuels('elec',C,TC,TT)/ELC_FLOW(RUN,TC);
+ EIntensity_FS('hydr',C,TC)$FLOW_OUT_FSFuels('hydr','chydr',TC,TT) = FLOW_IN_FSFuels('hydr',C,TC,TT)/FLOW_OUT_FSFuels('hydr','chydr',TC,TT);
 
 
 * ICAFSGR(C,FS,T,TT)$EIntensity_FS(FS,C,T-1) = EIntensity_FS(FS,C,T)/EIntensity_FS(FS,C,T-1);
@@ -276,8 +279,12 @@ EIntensity_FS('hydr',C,TC)$FLOW_OUT_FSFuels('hydr','chydr',TC,TT) = FLOW_IN_FSFu
  TCST_ELE_INV(RUN,TC) = TCST_ELE_I(RUN,TC) + SUM(XELC,TCST_INVC('REGION1',TC,XELC));
  QFEGY_GR(RUN,TC)$TCST_ELE_INV(RUN,TC-1) = TCST_ELE_INV(RUN,TC)/TCST_ELE_INV(RUN,TC-1);
 
- ECIntensity(RUN,TC) = TCST_ELE_INV(RUN,TC)/ELC_FLOW(RUN,TC);
- IFA_FEGY_GR(RUN,TC)$ECIntensity(RUN,TC-1) = ECIntensity(RUN,TC)/ECIntensity(RUN,TC-1);
+ FIntensity_FS('elec','fegy',TC) = TCST_ELE_INV(RUN,TC)/ELC_FLOW(RUN,TC);
+ FIntensity_FS('elec',FLAB,TC) = FLOW_OUT_FSFactors('elec',FLAB,TC,TT)/ELC_FLOW(RUN,TC);
+
+
+
+ IFAFSGR(F,FS,TC,TT)$FIntensity_FS(FS,F,TC-1) = FIntensity_FS(FS,F,TC)/FIntensity_FS(FS,F,TC-1);
 
 *sum the components of elec costs calcs:
  TCST_ELE(RUN,TC) = TCST_ELE_I(RUN,TC) + TCST_ELE_A(RUN,TC)+TCST_ELE_F(RUN,TC) + TCST_ELE_X(RUN,TC);

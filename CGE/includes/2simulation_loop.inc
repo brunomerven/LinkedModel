@@ -80,6 +80,7 @@ $include cge\includes\2runTIMES.inc
 
 * do reverse mapping for industry sectors (excludes power and petroleum)
  ICAGR(CXEP,A,TC) = SUM(FSXEP$MFSA(FSXEP,A),ICAFSGR(CXEP,FSXEP,TC,TT));
+ IFAGR(F,A,TC) = SUM(FS$MFSA(FS,A),IFAFSGR(F,FS,TC,TT));
 
 *   Loop over CGE model solve periods
   LOOP(TC$(NOT fail),
@@ -232,8 +233,8 @@ $offtext
 *          EFLOW(RDNT,XC,TC,TT) = max(EFLOW(RDNT,XC,TC,TT),1);
 
 
-*bm 20180222
-          ifa('fegy','aelec','nat') = ifa('fegy','aelec','nat')*IFA_FEGY_GR(RUN,TC);
+*b, apply change to IFA
+          ifa(F,A,'nat') = ifa(F,A,'nat')*IFAGR(F,A,TC);
 
 
 

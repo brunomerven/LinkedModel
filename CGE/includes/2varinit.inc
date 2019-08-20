@@ -229,8 +229,14 @@ betaca(A,C)=1;
  PCAP(X,TC,TT) = 0;
  HCAP(X,TC,TT) = 0;
 
- ICAGR(C,A,TC) = 0;
- gammamgr(C,H,TC,TT) = 0;
+ ICAGR(C,A,TC) = 1;
+ ICAFSGR(C,FS,TC,TT) = 1;
+ IFAGR(F,A,TC) = 1;
+ IFAFSGR(F,FS,TC,TT) = 1;
+
+ gammamgr(C,H,TC,TT) = 1;
 
  deltaq(cm,rw) = deltaq0(cm,rw);
  deltat(cm,rw) = deltat0(cm,rw);
+
+

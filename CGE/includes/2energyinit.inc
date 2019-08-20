@@ -12,7 +12,7 @@ SATIMODE = 1;
 SETS
 *Forecasting sets
  TIEPG(TC)               Years for which an electricity price forecast exists
- FSXEP(FS)               sector groupings in SATIM excluding power
+ FSXEP(FS)               sector groupings in SATIM to be used in ica growth mapping controlled below
  CXEP(C)                 commodities that get include3d in the ica adjustment
  EU                      end uses
 *Mappings
@@ -26,6 +26,7 @@ SETS
  MPRCFT(PRC,FT)          mapping SATIM PRCs to SATIM passenger (private-public) transport categories
  MPRCCOM(PRC,COM)        mapping of fuels and techs
  mCOMC(COM,C)            mapping SAGE and SATIM fuels
+ mCOMF(COM,F)            mapping SAGE factors and SATIM factor commodities
 
 * Linked Supply Sectors
  ALS(A)                  SATIM-eSAGE linked sectors /AELEC,APETR/
@@ -114,7 +115,7 @@ CXEP(C) = Yes;
 
 *b ;
 
-$load MFHH MFSA MPRCATYPE MPRCA MPRCCOM MPRCFS MPRCFH MPRCFT mCOMC MINCLPWR MINCLDUAL MINCLDUAL_A SUPGIC
+$load MFHH MFSA MPRCATYPE MPRCA MPRCCOM MPRCFS MPRCFH MPRCFT mCOMC mCOMF MINCLPWR MINCLDUAL MINCLDUAL_A SUPGIC
 
 
 PARAMETER
@@ -187,9 +188,6 @@ PARAMETER
  TCST_ELE_F(RUN,AY) ELC total F costs   (Gx)
  TCST_ELE_X(RUN,AY) ELC total TDX costs (Tx + Dx)
  TCST_ELE_INV(RUN,AY) Elc total inv cost (Gx + Tx + Dx)
- ECIntensity(RUN,AY) Electricity Capital Intensity
- IFA_FEGY_GR(RUN,AY) Growth in capital intensity (Electricity)
- QFEGY_GR(RUN,AY) Growth in capital supply (Electricity)
 
  TCST_COALSUP(RUN,AY) Total costs from detailed coal supply model
 
@@ -271,6 +269,7 @@ TPWRCLETAX(AY) TIMES calculated CO2 tax
 
  FLOW_OUT_FS(FS,COM,AY) Production of SATIM commodity COM for SATIM sector FS
  FLOW_OUT_FSFuels(FS,C,AY,TT) Production of CGE commodity C for SATIM sector FS
+ FLOW_OUT_FSFactors(FS,F,AY,TT) Production of CGE Factor F for SATIM sector FS
 
  FLOW_IN_FH(FH,COM,AY) Consumption of SATIM commodity COM for household sector FH
  FLOW_IN_FHFuels(FH,C,AY) Consumption of CGE commodity C for household sector FH
@@ -284,8 +283,10 @@ TPWRCLETAX(AY) TIMES calculated CO2 tax
 
  FLOW_IN_FHAllFuels(FH,C,AY) consumption of all energy commodities by household FH
 
- EIntensity_FS(FS,C,AY)    Energy Intensity of SATIM sectors
  EIntensity_FH(FH,C,AY)    Energy Intensity of SATIM households
+ EIntensity_FS(FS,C,AY)    Energy Intensity of SATIM sectors
+ FIntensity_FS(FS,F,AY)    Factor Intensity of SATIM sectors
+
 * Elc price calc parameters
 * TCST_ELE(T) power plant costs excluding fuel
 
@@ -300,8 +301,13 @@ TPWRCLETAX(AY) TIMES calculated CO2 tax
 
 * ICA change/growth parameters
  ICAFSGR(C,FS,AY,TT) change in ICA for SATIM sectors
+ IFAFSGR(F,FS,AY,TT) change in IFA for SATIM sectors
 
  ICAGR(C,A,AY) change in ICA
+ IFAGR(F,A,AY) change in IFA
+
+ QFEGY_GR(RUN,AY) Growth in capital supply (Electricity)
+
 *FH gammam growth parameters
  gammamgr(C,H,AY,TT)    growth in electricity consumption (from TIMES)
 
