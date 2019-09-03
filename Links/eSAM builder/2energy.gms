@@ -410,14 +410,18 @@ Set
  Parameter
  shrangas(AC,AC);
 
- SAM('ahydr','chydr') = 1;
+ SAM('ahydr','chydr') = 1.000001;
  SAM('abchm','cbchm') = SAM('abchm','cbchm')-SAM('ahydr','chydr');
 
  SAM(ACNT,'ahydr') = SAM('ahydr','chydr')*(SAM(ACNT,'abchm')/sum(ACNTP,SAM(ACNTP,'abchm')));
  SAM(ACNT,'abchm')=SAM(ACNT,'abchm')-SAM(ACNT,'ahydr');
 
- SAM('chydr','altrp-f')=SAM('ahydr','chydr');
+ SAM('chydr','altrp-f')=1;
+ SAM('chydr','row')=0.000001;
  SAM('cbchm','altrp-f')=SAM('cbchm','altrp-f')-SAM('chydr','altrp-f');
+ SAM('cbchm','dstk')=SAM('cbchm','dstk')-SAM('chydr','row');
+ SAM('dstk','s-i')=SAM('dstk','s-i')-SAM('chydr','row');
+ SAM('s-i','row')=SAM('s-i','row')-SAM('chydr','row');
 
 *Calculate new totals
  SAM(ACNT,'TOTAL') = SUM(ACNTP, SAM(ACNT,ACNTP));
