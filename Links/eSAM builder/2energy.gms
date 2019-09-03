@@ -232,7 +232,9 @@ Set
  SAM('ccoal-hgh','acoal')        =0;
 
 *Coal demand - exports
- SAM('ccoal-hgh','row')= SAM('ccoal','row');
+*Add potential for low coal exports
+ SAM('ccoal-hgh','row')= SAM('ccoal','row')-0.000001;
+ SAM('ccoal-low','row')= 0.000001;
  SAM('ccoal','row')=0;
 
 *Coal commodity
@@ -242,12 +244,9 @@ Set
  SAM('mtax','ccoal-hgh') =SAM('mtax','ccoal');
 
 *Supply of coal
- SAM('acoal','ccoal-hgh')= coal_est('high','prod','total');
-*sum(ACNT,SAM('ccoal-hgh',ACNT))-
-*                         (SAM('row','ccoal-hgh')+SAM('trc','ccoal-hgh')
-*                         +SAM('stax','ccoal-hgh')+SAM('mtax','ccoal-hgh'));
- SAM('acoal','ccoal-low')= coal_est('low','prod','total');
-*sum(ACNT,SAM('ccoal-low',ACNT));
+*adjusting to add the exports of low-coal
+ SAM('acoal','ccoal-hgh')= coal_est('high','prod','total')-0.000001;
+ SAM('acoal','ccoal-low')= coal_est('low','prod','total')+SAM('ccoal-low','row');
 
  SAM('ccoal',AC) = 0;
  SAM(AC,'ccoal') = 0;
@@ -292,11 +291,12 @@ Set
 *Coal demand
  SAM('ccoal-hgh',A)= coal_est('high','dem',A);
  SAM('ccoal-hgh',H)= coal_est('high','dem',H);
- SAM('ccoal-hgh','row')= coal_est('high','exp','total');
+*adjusting to add the exports of low-coal
+ SAM('ccoal-hgh','row')= coal_est('high','exp','total')-0.000001;
+ SAM('ccoal-low','row')= 0.000001;
  SAM('ccoal-low',A)= coal_est('low','dem',A);
-
- SAM('acoal','ccoal-hgh')=coal_est('high','prod','total');
- SAM('acoal','ccoal-low')=coal_est('low','prod','total');
+ SAM('acoal','ccoal-hgh')=coal_est('high','prod','total')-0.000001;
+ SAM('acoal','ccoal-low')=coal_est('low','prod','total')+0.000001;
 
 *Balance check
  SAM(ACNT,'TOTAL')=SUM(ACNTP,SAM(ACNTP,ACNT));
