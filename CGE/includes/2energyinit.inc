@@ -22,6 +22,7 @@ SETS
  MPRCATYPE(PRC,A,TECHTYPE)       mapping SATIM PRCs to SAGE activities with Energy Tech Type detail
  MPRCA(PRC,A)            mapping SATIM PRCs to SAGE activities
  MPRCFS(PRC,FS)          mapping SATIM PRCs to SATIM sectors (temporarily until sectors are reaggregated in the same way in both models)
+ MPRCFS2(PRC,FS)          mapping SATIM PRCs to SATIM sectors (used to pass CGE aggregates to SATIM sectors)
  MPRCFH(PRC,FH)          mapping SATIM PRCs to SATIM household income groups
  MPRCFT(PRC,FT)          mapping SATIM PRCs to SATIM passenger (private-public) transport categories
  MPRCCOM(PRC,COM)        mapping of fuels and techs
@@ -41,6 +42,7 @@ SETS
  PWR(COM) fuels to power
  XELC(PRC) transmission and distribution technologies
  COALSUP(PRC) detailed coal supply techs
+
 
 * sets used for reverse mapping of households
 *FH*----------------------------------------------------------------------------
@@ -115,7 +117,7 @@ CXEP(C) = Yes;
 
 *b ;
 
-$load MFHH MFSA MPRCATYPE MPRCA MPRCCOM MPRCFS MPRCFH MPRCFT mCOMC mCOMF MINCLPWR MINCLDUAL MINCLDUAL_A SUPGIC
+$load MFHH MFSA MPRCATYPE MPRCA MPRCCOM MPRCFS MPRCFS2 MPRCFH MPRCFT mCOMC mCOMF MINCLPWR MINCLDUAL MINCLDUAL_A SUPGIC
 
 
 PARAMETER
@@ -192,7 +194,10 @@ PARAMETER
  TCST_COALSUP(RUN,AY) Total costs from detailed coal supply model
 
  ELC_FLOW(RUN,AY) Electricity flows used as denominator in elc price calculation
+ ELC_FLOW2(RUN,AY) Electricity flows used as denominator in elc price calculation
+
  OIL_FLOW(RUN,AY) Oil product flows used as denominator in ica calc for petroleum
+ COAL_FLOW(RUN,AY,C) Coal flows used for theta calcs
 
  ELC_IMP(RUN,AY) Electricity Imports
  OIL_IMP(RUN,AY) Oil product imports
@@ -258,6 +263,7 @@ TPWRCLETAX(AY) TIMES calculated CO2 tax
 *BM+FH 201218: SETTING STARTING POINT FOR HYDROGEN
  HCAP(X,AY,TT)       Hydrogen (fuels) supply vector for capacity (results from TIMES)
  CCAP(AY,TT)       Coal supply vector for capacity (results from TIMES)
+ COALMINCAP(TC) coal mining capacity (sum of consumption and exports-imports)
 
 
 

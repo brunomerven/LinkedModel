@@ -1,8 +1,11 @@
 sets
   MOD models /SATIM, eSAGE/
   QType quantitity types /qq, qd, qint, qe, qm, qh, qx, qxac/
-  IN_OUT flow direction /IN, OUT/
+  IN_OUT flow direction /IN, OUT, CO2/
+  SATIM_IND /Activity, Capacity, NewCapacity, Investment, GVA, Employment/
+  CGE_IND /GVA, Employment/
 
+  SATIM_LAB(UC_N) SATIM employment constraint names / UCPWR_FLAB-M, UCPWR_FLAB-P, UCPWR_FLAB-S, UCPWR_FLAB-T/
 ;
 
 parameters
@@ -12,4 +15,17 @@ parameters
 
  EIntensity(MOD,FSATIM,C,TC,TT,RUN) Energy Intensity in SATIM and ESAGE models
 
+ CO2OUT(C) CO2 emission factors for linked model
+
+ CGE_OUTPUT(A,TC,CGE_IND,RUN) CGE indicators by run and activity
+
+ SATIM_OUTPUT(PRC,TC,SATIM_IND,RUN) SATIM indicators by run and activity
 ;
+
+ CO2OUT('ccoal-low') = 96.25;
+ CO2OUT('ccoal-hgh') = 96.25;
+ CO2OUT('cngas') = 56.1;
+ CO2OUT('cpetr_p') = 69.3;
+ CO2OUT('cpetr_d') = 74.0667;
+* bm average for HFO, LPG and Kerosene
+ CO2OUT('cpetr_o') = 71.133;

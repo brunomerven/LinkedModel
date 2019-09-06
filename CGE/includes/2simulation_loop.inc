@@ -82,6 +82,10 @@ $include cge\includes\2runTIMES.inc
  ICAGR(CXEP,A,TC) = SUM(FSXEP$MFSA(FSXEP,A),ICAFSGR(CXEP,FSXEP,TC,TT));
  IFAGR(F,A,TC) = SUM(FS$MFSA(FS,A),IFAFSGR(F,FS,TC,TT));
 
+*BM correction on power sector from freight demand for moving coal
+ ICAGR('cftrp-l','aelec',TC) = ICAGR('ccoal-low','aelec',TC);
+
+
 *   Loop over CGE model solve periods
   LOOP(TC$(NOT fail),
 
@@ -201,6 +205,11 @@ $offtext
   ica(C,A,'NAT')$ICAGR(C,A,TC) = ica(C,A,'NAT')*ICAGR(C,A,TC);
 
 
+  if(ORD(TC) gt 28,ica('ccoal-low','apetr','NAT') = 0);
+
+  if(ORD(TC) gt 1,ica('ccoal-low','acoal','NAT') = 0);
+
+
 *sr/bm/fh .L experiment
 *BM+FH 201218: SETTING STARTING POINT FOR HYDROGEN
 *  QF.L(F,'ahydr',RD)$(ICAGR('chydr','atrps',TC)) = QF.L(F,'ahydr',RD)*ICAGR('chydr','atrps',TC);
@@ -301,16 +310,29 @@ $offtext
          ICA('cngas','AHYDR','nat')$(SUM(A,ICA('CHYDR',A,'nat')) GT 0.001 and EIntensity_FS('hydr','cngas',TC)) = EIntensity_FS('hydr','cngas',TC);
 
 *bm 05062019          AFXGR('AELEC','NAT',XC,TC)$EFX(TT,TC) = EAFXCAP(XC,TC,TT)/EAFXCAP(XC,TC-1,TT)- 1;
-          AFXGR('AELEC','NAT',XC,TC)$EFX(TT,TC) = QFEGY_GR(RUN,TC)- 1;
+          AFXGR('aelec','NAT',XC,TC)$EFX(TT,TC) = QFEGY_GR(RUN,TC)- 1;
 
-          AFXGR('AELEC','NAT',XC,TC)$(NOT EFX(TT,TC) AND QFSUPX('FEGY',XC,TC-1,TT) LT .9) = -natdrate;
+          AFXGR('aelec','NAT',XC,TC)$(NOT EFX(TT,TC) AND QFSUPX('FEGY',XC,TC-1,TT) LT .9) = -natdrate;
 
 
 *bmfh coal sector
-*          AFX('ACOAL',RD)$EFX(TT,TC) = YES;
+          AFX('acoal',RD)$EFX(TT,TC) = YES;
+
+*bm make ratio of coal outputs exogenous and control from SATIM outputs
+          ACET2('acoal') = YES;
+
+          theta('acoal','ccoal-low') = COAL_FLOW(RUN,TC,'ccoal-low')/sum(C,COAL_FLOW(RUN,TC,C))*(1-(theta('acoal','cmore')+theta('acoal','cmine')));
+          theta('acoal','ccoal-hgh') = COAL_FLOW(RUN,TC,'ccoal-hgh')/sum(C,COAL_FLOW(RUN,TC,C))*(1-(theta('acoal','cmore')+theta('acoal','cmine')));
+
 
           CCAP(TC,TT) = sum(C,FLOW_OUT_FSFUELS('coal',C,TC,TT));
-*          AFXGR('ACOAL','NAT',XC,TC)$CCAP(TC-1,TT) = CCAP(TC,TT)/CCAP(TC-1,TT)-1;
+          AFXGR('ACOAL','NAT',XC,TC)$COALMINCAP(TC-1) = COALMINCAP(TC)/COALMINCAP(TC-1)-1;
+
+*bm cap decrease to 5%
+*          if(TT1(TT), AFXGR('ACOAL','NAT',XC,TC)$(AFXGR('ACOAL','NAT',XC,TC) LT -.05) = -.05);
+*          AFXGR('ACOAL','NAT',XC,TC)$(AFXGR('ACOAL','NAT',XC,TC) LT -.05) = -.05;
+
+
           QE.FX('ccoal-hgh','REST')$FLOW_IN_FSFuels('EXP','ccoal-hgh',TC-1,TT) = QE.L('ccoal-hgh','REST')*FLOW_IN_FSFuels('EXP','ccoal-hgh',TC,TT)/FLOW_IN_FSFuels('EXP','ccoal-hgh',TC-1,TT) ;
 
 *          AFLEO('ACOAL')$(NOT T1(TC)) = YES;
@@ -324,15 +346,15 @@ $offtext
            AFXGR('APETR','NAT',XC,TC)$EFX(TT,TC) = PAFXCAP(XC,TC,TT)/PAFXCAP(XC,TC-1,TT)- 1;
 
 *FH 71218
-           AFXGR('APETR','NAT',XC,TC)$(NOT EFX(TT,TC) AND QFSUPX('FCAP',XC,TC-1,TT) LT .9) = -natdrate;
+*           AFXGR('APETR','NAT',XC,TC)$(NOT EFX(TT,TC) AND QFSUPX('FCAP',XC,TC-1,TT) LT .9) = -natdrate;
 *           AFXGR('APETR','NAT',XC,TC)$(NOT EFX(TT,TC) AND QFSUPX('FSAS',XC,TC-1,TT) LT .9) = -natdrate;
-           AFXGR('APETR','NAT',XC,'2044') = 0;
-           AFXGR('APETR','NAT',XC,'2045') = 0;
-           AFXGR('APETR','NAT',XC,'2046') = 0;
-           AFXGR('APETR','NAT',XC,'2047') = 0;
-           AFXGR('APETR','NAT',XC,'2048') = 0;
-           AFXGR('APETR','NAT',XC,'2049') = 0;
-           AFXGR('APETR','NAT',XC,'2050') = 0;
+*           AFXGR('APETR','NAT',XC,'2044') = 0;
+*           AFXGR('APETR','NAT',XC,'2045') = 0;
+*           AFXGR('APETR','NAT',XC,'2046') = 0;
+*           AFXGR('APETR','NAT',XC,'2047') = 0;
+*           AFXGR('APETR','NAT',XC,'2048') = 0;
+*           AFXGR('APETR','NAT',XC,'2049') = 0;
+*           AFXGR('APETR','NAT',XC,'2050') = 0;
 
 *           QE.FX('cpetr_o','REST')$FLOW_IN_FSFuels('EXP','cpetr_o',TC-1,TT) = QE.L('cpetr_o','REST')*FLOW_IN_FSFuels('EXP','cpetr_o',TC,TT)/FLOW_IN_FSFuels('EXP','cpetr_o',TC-1,TT);
 *           QE.FX('cpetr_d','REST') = FLOW_IN_FSFuels('EXP','cpetr_d',TC,TT);
@@ -360,12 +382,19 @@ $offtext
 *BM+FH 201218: SETTING STARTING POINT FOR HYDROGEN
 * QF.L('FCAP','AHYDR','NAT')$(NOT HCAP(XC,TC,TT)) =  QF.L('FCAP','AHYDR','NAT')*(1+RKAP('FCAP','altrp_f','NAT'));
 * QF.L('FCAP','AHYDR','NAT')$(HCAP(XC,TC,TT) GT 0.00001) = ifa('FCAP','AHYDR','NAT')*iva('AHYDR','NAT')*FLOW_OUT_FSFuels('hydr','chydr',TC,TT);
- QF.L(F,'AHYDR','NAT')$(HCAP(XC,TC,TT) GT 0.00001) = ifa(F,'AHYDR','NAT')*iva('AHYDR','NAT')*FLOW_OUT_FSFuels('hydr','chydr',TC,TT);
+* QF.L(F,'AHYDR','NAT')$(HCAP(XC,TC,TT) GT 0.00001) = ifa(F,'AHYDR','NAT')*iva('AHYDR','NAT')*FLOW_OUT_FSFuels('hydr','chydr',TC,TT);
+
+*bm hydrogen not in public transport in SAM so leaving it out for now
+ QF.L(F,'AHYDR','NAT')$(HCAP(XC,TC,TT) GT 0.00001) = ifa(F,'AHYDR','NAT')*iva('AHYDR','NAT')*FLOW_IN_FSFuels('tranlf','chydr',TC,TT);
+
+
 *bm set reasonable starting value for QVA otherwise wfdist goes -ve.
- QVA.L('AHYDR','NAT')$(HCAP(XC,TC,TT) GT 0.00001) = sum(F,QF.L(F,'AHYDR','NAT'))*0.5;
+ QVA.L('AHYDR','NAT')$(HCAP(XC,TC,TT) GT 0.00001) = sum(F,QF.L(F,'AHYDR','NAT'));
  PVA.L('AHYDR','NAT')$(HCAP(XC,TC,TT) GT 0.00001) = 1;
 
- QINTA.L('AHYDR','NAT')$(HCAP(XC,TC,TT) GT 0.00001) = FLOW_OUT_FSFuels('hydr','CHYDR',TC,TT);
+* QINTA.L('AHYDR','NAT')$(HCAP(XC,TC,TT) GT 0.00001) = FLOW_OUT_FSFuels('hydr','CHYDR',TC,TT);
+ QINTA.L('AHYDR','NAT')$(HCAP(XC,TC,TT) GT 0.00001) = FLOW_IN_FSFuels('tranlf','CHYDR',TC,TT);
+
  QINT.L(C,'AHYDR')$(HCAP(XC,TC,TT) GT 0.00001) = ica(C,'AHYDR','NAT')*QINTA.L('AHYDR','NAT');
 
 
