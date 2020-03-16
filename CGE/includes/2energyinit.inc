@@ -43,11 +43,21 @@ SETS
  XELC(PRC) transmission and distribution technologies
  COALSUP(PRC) detailed coal supply techs
 
+ CCOAL(C)              coal commodities in eSAGE / ccoal-low, ccoal-hgh /
 
 * sets used for reverse mapping of households
 *FH*----------------------------------------------------------------------------
  MFHHT(FH,H,AY) reverse mapping (TIMES to CGE) for households
 
+* bm sets for adjusting budget share weightings
+ CLN(H,HP,T)         Closest Lower Neighbour
+ CUN(H,HP,T)         Closets Upper Neighbour
+
+* bm sets for adjusting budget share weightings of energy goods
+ CHouseholds(C) Commodities consumed by households
+ CHEnergy(C) Energy Commodities consumed by households /celec/
+ CHNonEnergy(C) Non-Energy Commodities consumed by households
+;
 
 
 ;
@@ -59,16 +69,30 @@ Parameters
  popvalfact(H,X,AY) parameter required for top 10% split
 
 
+* bm parameters used for adjusting budget share weightings
+ BudShare(C,H,T)  budget share of marketed commodity c by household h
+
+ DistanceMatrix(H,HP,T) distance to all
+
+ TmpMin(H,T) minimum of row
+ TmpLowerNeighbour(H,HP,T) lower neighbour
+ TmpUpperNeighbour(H,HP,T) upper neighbour
+
+ TotalDistance(H,T) sum of distances
+ DistLower(H,T) distance to lower
+ DistUpper(H,T) distance to upper
+ WeightLower(H,T) weighting of lower
+ WeightUpper(H,T) weighting of upper
+;
+
+* bm parameters to do budget reallocations of energy goods
+
+
 ;
 
 * mapping of households
 *FH*----------------------------------------------------------------------------
  popvalfact(H,X,TC)=1;
- popvalfact('hhd-91',X,TC)=0.92;
- popvalfact('hhd-92',X,TC)=0.8546;
- popvalfact('hhd-93',X,TC)=0.8;
- popvalfact('hhd-94',X,TC)=0.7539;
- popvalfact('hhd-95',X,TC)=0.7143;
 
 
 

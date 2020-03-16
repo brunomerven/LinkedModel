@@ -243,6 +243,7 @@ PARAMETERS
  shii(INS,INSP)          share of inst'on i in post-tax post-sav income of inst ip
  supernum(H)             LES supernumerary income
  theta(A,C)              yield of commodity C per unit of activity A
+ theta0(A,C)             yield of commodity C per unit of activity A
  ta01(A,RD)              0-1 par for potential flexing of activity tax rates
  tins01(INS)             0-1 par for potential flexing of dir tax rates
  trnsfr(INS,AC)          transfers fr. inst. or factor ac to institution ins
@@ -620,6 +621,7 @@ PARAMETER TRMSHR(C,RW);
  theta(A,C)$PXAC0(A,C)
   =  QXAC0(A,C)/(QA0(A)- SUM(H,QHA0(A,H))) ;
 
+ theta0(A,C) = theta(A,C);
 *Intermediate input coefficient = input use / output quantity
 *bm QINTA0(A,RD) = SUM(C$PQ0(C), SUM(ARD$MARD(ARD,A,RD), SAM(C,ARD))  / PQ0(C)) ;
  QINTA0(A,RD) = QAR0(A,RD);
@@ -980,6 +982,7 @@ $OFFTEXT
  ELASCHK(H)     = SUM(C, BUDSHR(C,H)*YELASTAB(C,H))
                   + SUM(A, BUDSHR2(A,H)*HELAS(A,H)) - 1 ;
 
+*fh 12/11/19:
 *Correct elasticities to make them satisfy Engle aggregation exactly
  YELASTAB(C,H)$(ELASCHK(H) + 1)  = YELASTAB(C,H)/(ELASCHK(H) + 1);
  HELAS(A,H)$(ELASCHK(H) + 1)     = HELAS(A,H)/(ELASCHK(H) + 1);
@@ -992,6 +995,8 @@ $OFFTEXT
  betam0(C,H)  = betam(C,H);
  betah(A,H)   = BUDSHR2(A,H)*HELAS(A,H);
 
+*fh 12/11/19: code removed for transforming LES to CD
+$ontext
 *utax code
 * gammam0(C,H)$BUDSHR(C,H)
 *     =  ( (SUM(CP, SAM(CP,H)) + SUM(AP, QHA0(AP,H)*PA0(AP))) / PQ0(C) ) * ( BUDSHR(C,H) + betam(C,H)/FRISCH(H));
@@ -1007,6 +1012,14 @@ $OFFTEXT
  gammam(C,H)   =  gammam0(C,H);
 
  gammah(A,H)   =  gammah0(A,H);
+$offtext
+
+ gammam0(C,H)  =  eps;
+ gammah0(A,H)  =  eps;
+ gammam(C,H)   =  gammam0(C,H);
+ gammah(A,H)   =  gammah0(A,H);
+
+
 
 *Checking LES parameters --------------------------
 PARAMETERS

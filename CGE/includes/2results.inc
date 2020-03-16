@@ -54,6 +54,7 @@
  QXX(C,XC,TC,TT)          = QX.L(C);
  QXACX(A,C,XC,TC,TT)      = QXAC.L(A,C);
  TABSX(XC,TC,TT)          = TABS.L;
+ THETAX(A,C,RUN,TC)       = theta(A,C);
  TINSX(INS,XC,TC,TT)      = TINS.L(INS);
  TINSADJX(XC,TC,TT)       = TINSADJ.L;
  TAX(A,RD,XC,TC,TT)       = TA.L(A,RD);

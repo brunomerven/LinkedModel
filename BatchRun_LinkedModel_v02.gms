@@ -24,7 +24,7 @@ $SETGLOBAL GDXoutfolder2 %workingfolder%GDXCGEout\
 $SETGLOBAL referencerun REF_ANNUAL_BU
 
 *$SETGLOBAL referencerun PAMS_BFUEL
-$SETGLOBAL outputworkbook outputworkbook_v08.xlsx
+$SETGLOBAL outputworkbook outputworkbook_v09.xlsx
 
 *-------------------------------------------------------------------------------
 
@@ -500,10 +500,10 @@ $batinclude cge\includes\SATIMViz_init.inc
 *-------------------------------------------------------------------------------
 
 *10 Preparation for stored output-----------------------------------------------
-$call    "gdxxrw i=%outputworkbook% o=SATMR2 index=index_E2G!a6 checkdate"
-$gdxin   SATMR2.gdx
-$loaddc Fuels Fuels2 Externalities PassengerRoad PassengerModes FreightRoad FreightModes
-$load mFuels mFuels2 mExt MFUELPWR
+*$call    "gdxxrw i=%outputworkbook% o=SATMR2 index=index_E2G!a6 checkdate"
+*$gdxin   SATMR2.gdx
+*$loaddc Fuels Fuels2 Externalities PassengerRoad PassengerModes FreightRoad FreightModes
+*$load mFuels mFuels2 mExt MFUELPWR
 
  Scalars
  EFVAL                 temporary values stored here
@@ -736,6 +736,11 @@ $gdxout %workingfolder%GDXCGEout\Run
 $unload calc
 $gdxout
 $offtext
+
+
+execute_unload "SATIM_OUTPUT.gdx" SATIM_OUTPUT
+execute 'gdxxrw.exe i=SATIM_OUTPUT.gdx o=%workingfolder%%outputworkbook% index=index_G2E!a6';
+
 
 *END OF BATCHRUN FILE
 *$offtext

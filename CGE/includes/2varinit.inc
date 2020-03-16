@@ -49,6 +49,7 @@
  TAADJ.L                = TAADJ0;
  TABS.L                 = TABS0;
  TAPS.L                 = TAPS0;
+ theta(A,C)             = theta0(A,C);
  TQADJ.L                = TQADJ0;
  TQ.L(C)                = TQ0(C);
  TQPS.L                 = TQPS0;
@@ -142,7 +143,8 @@
  CERES('cpetr_o')=YES;
 * QE.FX('cpetr_o','REST') = QE0('cpetr_o','REST') ;
 
-
+*bm setting acoal coal aggregate price
+ pacoalx(T1,RUN) =  sum(CCOAL,theta0('acoal',CCOAL)*pq0(CCOAL))/sum(CCOAL,theta0('acoal',CCOAL)); 
 
 
  pwebar(C,RW) = PWE0(C,RW);

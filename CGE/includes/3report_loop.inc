@@ -808,9 +808,7 @@ $offtext
  income('xxhhd-6',XC,TC,TT)=YIX('hhd-6',XC,TC,TT);
  income('xxhhd-7',XC,TC,TT)=YIX('hhd-7',XC,TC,TT);
  income('xxhhd-8',XC,TC,TT)=YIX('hhd-8',XC,TC,TT);
- income('xxhhd-9',XC,TC,TT)=YIX('hhd-91',XC,TC,TT)+YIX('hhd-92',XC,TC,TT)
-                           +YIX('hhd-93',XC,TC,TT)+YIX('hhd-94',XC,TC,TT)
-                           +YIX('hhd-95',XC,TC,TT);
+ income('xxhhd-9',XC,TC,TT)=YIX('hhd-9',XC,TC,TT);
 
  rank(hr)=d('rank',hr);
  mean(XC,TC,TT)=sum(hr,income(hr,XC,TC,TT))/10;
