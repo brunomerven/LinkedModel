@@ -189,6 +189,17 @@ $offtext
 
 
 * make adjustments to ica
+
+* calculate ica change for private passenger. This needs to be generalised to other household end-uses
+  EHIntensity(C,'aprtr',TC) = FLOW_IN_FTFuels('tppr',C,TC)/sum(FH,PKMFH('tppr',FH,TC));
+
+  icagr(C,'aprtr',TC)$EHIntensity(C,'aprtr',TC-1) = EHIntensity(C,'aprtr',TC)/EHIntensity(C,'aprtr',TC-1);
+
+
+
+
+
+
   ica(C,A,'NAT')$ICAGR(C,A,TC) = ica(C,A,'NAT')*ICAGR(C,A,TC);
 
 
@@ -447,6 +458,9 @@ $offtext
 *        TQELEC.LO('CHYDR')$(SUM(A,ICA('CHYDR',A,'nat')) GT 0.001) = -INF;
 *        TQELEC.UP('CHYDR')$(SUM(A,ICA('CHYDR',A,'nat')) GT 0.001) = +INF;
 
+*bm to recalc household budget shares
+$include cge\includes\EnergyGoodsBudgetAllocation.inc
+
 
 *bm to recalc household budget shares
 $include cge\includes\BudgetShare_Recalc.inc
@@ -501,6 +515,8 @@ $offtext
       QF.UP('FCAP',A,RD)$QF0('FCAP',A,RD)=+INF;
       QF.LO('FCAP',A,RD)$QF0('FCAP',A,RD)=-INF;
 
+*bm test aprtr
+*  iva('aprtr','nat') = 0;
 
 
       SOLVE standcge USING MCP ;

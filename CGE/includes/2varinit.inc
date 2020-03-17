@@ -118,7 +118,7 @@
  QE.FX('cptrp-o','REST') = QE0('cptrp-o','REST') ;
 
 
-* CERES('ccoal-low')=YES;
+ CERES('ccoal-low')=YES;
 
 
 
@@ -144,7 +144,7 @@
 * QE.FX('cpetr_o','REST') = QE0('cpetr_o','REST') ;
 
 *bm setting acoal coal aggregate price
- pacoalx(T1,RUN) =  sum(CCOAL,theta0('acoal',CCOAL)*pq0(CCOAL))/sum(CCOAL,theta0('acoal',CCOAL)); 
+ pacoalx(T1,RUN) =  sum(CCOAL,theta0('acoal',CCOAL)*pq0(CCOAL))/sum(CCOAL,theta0('acoal',CCOAL));
 
 
  pwebar(C,RW) = PWE0(C,RW);

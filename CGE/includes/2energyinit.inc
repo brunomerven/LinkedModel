@@ -55,7 +55,9 @@ SETS
 
 * bm sets for adjusting budget share weightings of energy goods
  CHouseholds(C) Commodities consumed by households
- CHEnergy(C) Energy Commodities consumed by households /celec/
+ CHEnergy(C) Energy Commodities consumed by households / ccoal-hgh, celec, cpetr_o, cptrp-l , cprtr /
+* leaving cptrp-o out for now, as it doesn't directly link to mode switching questions, this could be treated separately when looking at air travel questions.
+
  CHNonEnergy(C) Non-Energy Commodities consumed by households
 ;
 
@@ -69,8 +71,14 @@ Parameters
  popvalfact(H,X,AY) parameter required for top 10% split
 
 
+* bm parameters used for updating ica for household consumption of energy services e.g. private transport
+ EHIntensity(C,A,AY) energy intensity for household consumed energy services
+
 * bm parameters used for adjusting budget share weightings
  BudShare(C,H,T)  budget share of marketed commodity c by household h
+
+ BudShare0(C,H,T)  budget share of marketed commodity c by household h used as template
+
 
  DistanceMatrix(H,HP,T) distance to all
 
@@ -83,12 +91,26 @@ Parameters
  DistUpper(H,T) distance to upper
  WeightLower(H,T) weighting of lower
  WeightUpper(H,T) weighting of upper
-;
 
 * bm parameters to do budget reallocations of energy goods
-
-
+ PQest(C,T)         price estimate for commodity based on ica change
+ Rebound(T) rebound factor
+ BudShareNoRebound(C,H,T)  assuming no Rebound
+ BudShareFullRebound(C,H,T) assuming full Rebound
+ BudShareNonEnergy(H,T) buget share of non-energy good for re-allocation calculations
 ;
+
+* Identifying Energy goods consumed by households
+CHouseholds(C)$sum(H,BUDSHR(C,H)) = YES;
+CHNonEnergy(CHouseholds) = YES;
+CHNonEnergy(CHEnergy) = NO;
+
+* initialise budgetshare template
+BudShare0(C,H,TC) = BUDSHR(C,H);
+
+BudShareNonEnergy(H,T1) =  1-sum(CHEnergy,BudShare0(CHEnergy,H,T1));
+*initialise rebound parameter (should be made a scenario parameter later)
+Rebound(T) = 0;
 
 * mapping of households
 *FH*----------------------------------------------------------------------------

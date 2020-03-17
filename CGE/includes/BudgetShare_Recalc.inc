@@ -34,7 +34,10 @@ LOOP(H,
 
 
 
-    BudShare(C,H,TC) = WeightLower(H,TC) * sum(HP$CLN(H,HP,TC), BUDSHR(C,HP)) + WeightUpper(H,TC) * sum(HP$CUN(H,HP,TC), BUDSHR(C,HP));
+    BudShare(C,H,TC) = WeightLower(H,TC) * sum(HP$CLN(H,HP,TC), BudShare0(C,HP,TC)) + WeightUpper(H,TC) * sum(HP$CUN(H,HP,TC), BudShare0(C,HP,TC));
+*    BudShare(C,H,TC) = WeightLower(H,TC) * sum(HP$CLN(H,HP,TC), BUDSHR(C,HP)) + WeightUpper(H,TC) * sum(HP$CUN(H,HP,TC), BUDSHR(C,HP));
+
+
 *uncomment / comment below to enforce / not enforce budget share calc in model
     betam(C,H) = BudShare(C,H,TC);
 
