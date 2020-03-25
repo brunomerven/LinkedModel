@@ -242,3 +242,19 @@ betaca(A,C)=1;
  deltat(cm,rw) = deltat0(cm,rw);
 
 
+
+
+
+* budget share aspects
+* initialise budgetshare template
+DistanceMatrix(H,HP,TC) = 0;
+DistUpper(H,TC) = 0;
+DistLower(H,TC) = 0;
+TmpMin(H,TC) = 0;
+CUN(H,HP,TC) = No;
+CLN(H,HP,TC) = No;
+
+BudShare0(C,H,TC) = BUDSHR(C,H);
+
+BudShareNonEnergy(H,T1) =  1-sum(CHEnergy,BudShare0(CHEnergy,H,T1));
+

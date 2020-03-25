@@ -171,6 +171,8 @@ PARAMETERS
   CST_ACTC(REG,V,AY,PRC)         TIMES calculated annual activity costs
   CST_FIXC(REG,V,AY,PRC)         TIMES calculated annual fixed costs
 
+  COM_PROJ(REG,AY,COM)           TIMES Demand baseline projection
+
   UC_CAP(UC_N,SIDE,REG,AY,PRC)   TIMES multiplier of capacity variables
 
 

@@ -56,6 +56,12 @@ SETS
 * bm sets for adjusting budget share weightings of energy goods
  CHouseholds(C) Commodities consumed by households
  CHEnergy(C) Energy Commodities consumed by households / ccoal-hgh, celec, cpetr_o, cptrp-l , cprtr /
+
+* Transport Demands
+ TPPR(COM) Private Passenger Demand Commodities /TPPRCAR, TPPRMOT, TPPRSUV/
+
+
+
 * leaving cptrp-o out for now, as it doesn't directly link to mode switching questions, this could be treated separately when looking at air travel questions.
 
  CHNonEnergy(C) Non-Energy Commodities consumed by households
@@ -98,6 +104,7 @@ Parameters
  BudShareNoRebound(C,H,T)  assuming no Rebound
  BudShareFullRebound(C,H,T) assuming full Rebound
  BudShareNonEnergy(H,T) buget share of non-energy good for re-allocation calculations
+
 ;
 
 * Identifying Energy goods consumed by households
@@ -105,13 +112,11 @@ CHouseholds(C)$sum(H,BUDSHR(C,H)) = YES;
 CHNonEnergy(CHouseholds) = YES;
 CHNonEnergy(CHEnergy) = NO;
 
-* initialise budgetshare template
-BudShare0(C,H,TC) = BUDSHR(C,H);
-
-BudShareNonEnergy(H,T1) =  1-sum(CHEnergy,BudShare0(CHEnergy,H,T1));
 *initialise rebound parameter (should be made a scenario parameter later)
 Rebound(T) = 0;
-
+PQX('celec','base','2012',TT) = PQ0('celec');
+YIX(H,'base','2012',TT) = YI0(H);
+QHX('cprtr',H,'base','2012',TT) = QH0('cprtr',H);
 * mapping of households
 *FH*----------------------------------------------------------------------------
  popvalfact(H,X,TC)=1;
@@ -366,8 +371,6 @@ TPWRCLETAX(AY) TIMES calculated CO2 tax
 * Transport Mode Scenario
  TRAMOD        Transport mode scenario
 
-
-
 ;
 * set Transport Mode scenario to default
 TRAMOD = 0;
@@ -407,7 +410,6 @@ $load UCONV_C_T2C UCONV_A_T2C
 *---------------------------------------------------
 
 *Initialize values of linking variables
- EAFXCAP(XC,TC,TT) = EPS;
 * EFLOW('IMP',XC,TC,TT) = QM0('CELEC','REST');
 * PFLOW('IMP',XC,TC,TT) = QM0('CPETR','REST');
 
@@ -416,19 +418,9 @@ $load UCONV_C_T2C UCONV_A_T2C
 *fh: TEMP EXCLUSION 1702
 * PFLOW('IMP',XC,TC,TT) = QM0('CPETR','REST');
 * AFLOW_INFuels('APETR','CCOIL',TC,TT) = QINT0('CCOIL','APETR');
- EPRICE(TC,TT)=PQ0('CELEC');
- EINVCOST(X,TC,TT) = 0;
- INVCOST(RUN,TC,TT,PRC) = 0;
- BPINV(X,TC,TCP,PRC) = 0;
-
- ECAP(X,TC,TT) = 0;
- PCAP(X,TC,TT) = 0;
-*BM+FH 201218: SETTING STARTING POINT FOR HYDROGEN
- HCAP(X,TC,TT) = 0;
 
 
- ICAGR(C,A,TC) = 0;
- gammamgr(C,H,TC,TT) = 0;
+
 
 
 

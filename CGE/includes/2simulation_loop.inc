@@ -27,7 +27,19 @@ LOOP(XC$(NOT fail),
 if( not TT1(TT),
   execute 'gdxxrw.exe i=SATM\DMD_PRJ.xlsx o=mcdem2.gdx index=index_E2G!a6';
   execute_load "mcdem2.gdx" SIM_DEMX PKMFH Passengerkm Tonkm;
+
+
+* Adjust Transport Demand
+  LOOP(TC,
+        SIM_DEMX(TPPR,TC)$(SUM(H,QHX('cprtr',H,'base',TC-1,TT-1))) = SIM_DEMX(TPPR,TC-1)*SUM(H,QHX('cprtr',H,'base',TC,TT-1))/SUM(H,QHX('cprtr',H,'base',TC-1,TT-1));
 );
+* LOOP(TC,
+
+
+);
+*if( not TT1(TT),
+
+
 * Demand DDS File
     PUT  SIM_DEM_FILE;
     SIM_DEM_FILE.pc = 2;
@@ -86,10 +98,6 @@ $include cge\includes\2runTIMES.inc
 
 *   Loop over CGE model solve periods
   LOOP(TC$(NOT fail),
-
-*BM+FH 201218: SETTING STARTING POINT FOR HYDROGEN
- ica('chydr',A,'NAT')$(SUM(FSXEP$MFSA(FSXEP,A),EIntensity_FS(FSXEP,'chydr',TC-1)) LT 0.0001 and SUM(FSXEP$MFSA(FSXEP,A),EIntensity_FS(FSXEP,'chydr',TC)) GT 0.00001 AND ica('chydr',A,'NAT'))
-                         = SUM(FSXEP$MFSA(FSXEP,A),EIntensity_FS(FSXEP,'chydr',TC));
 
 *   CA calculate units of capital required given capacity from times (units not consistent with CGE)
     EAFXCAP(XC,TC,TT)$(EFX(TT,TC) AND ifa('FEGY','AELEC','nat')) = ifa('FEGY','AELEC','nat')*iva('AELEC','nat')*ECAP(XC,TC,TT);
@@ -190,8 +198,17 @@ $offtext
 
 * make adjustments to ica
 
+*BM+FH 201218: SETTING STARTING POINT FOR HYDROGEN
+ ica('chydr',A,'NAT')$(SUM(FSXEP$MFSA(FSXEP,A),EIntensity_FS(FSXEP,'chydr',TC-1)) LT 0.0001 and SUM(FSXEP$MFSA(FSXEP,A),EIntensity_FS(FSXEP,'chydr',TC)) GT 0.00001 AND ica('chydr',A,'NAT'))
+                         = SUM(FSXEP$MFSA(FSXEP,A),EIntensity_FS(FSXEP,'chydr',TC));
+
 * calculate ica change for private passenger. This needs to be generalised to other household end-uses
-  EHIntensity(C,'aprtr',TC) = FLOW_IN_FTFuels('tppr',C,TC)/sum(FH,PKMFH('tppr',FH,TC));
+  EHIntensity(C,'aprtr',TC) = FLOW_IN_FTFuels('tppr',C,TC)/sum(TPPR,COM_PROJ('REGION1',TC,TPPR));
+
+
+*BM 190320: SETTING STARTING POINT FOR ICA private transport
+ ica('celec','aprtr','NAT')$(EHIntensity('celec','aprtr',TC-1) LT 0.0001 and EHIntensity('celec','aprtr',TC) GT 0.00001)
+                         = EHIntensity('celec','aprtr',TC)/EHIntensity('cpetr_p','aprtr',TC)*ica('cpetr_p','aprtr','NAT');
 
   icagr(C,'aprtr',TC)$EHIntensity(C,'aprtr',TC-1) = EHIntensity(C,'aprtr',TC)/EHIntensity(C,'aprtr',TC-1);
 

@@ -19,6 +19,9 @@ EBCHECK('eSAGE','imp','OUT',C,TC,TT,RUN) = QMX(C,'rest',XC,TC,TT)-QEX(C,'rest',X
 EBCHECK('SATIM',FH,'IN',C,TC,TT,RUN) = FLOW_IN_FHAllFuels(FH,C,TC)*(-1);
 EBCHECK('eSAGE',FH,'IN',C,TC,TT,RUN)$UCONV_C_T2C(C) = SUM(H$MFHHT(FH,H,TC),QHX(C,H,XC,TC,TT))/UCONV_C_T2C(C)*(-1);
 
+
+
+
 EBCHECK(MOD,FSATIM,'CO2',C,TC,TT,RUN) = EBCHECK(MOD,FSATIM,'IN',C,TC,TT,RUN)*CO2OUT(C);
 
 *EIntensity('SATIM',FS,C,TC,TT,RUN)$SFORE_X(FS,TC) = FinalDemand('SATIM',FS,C,TC,TT,RUN)/SFORE_X(FS,TC);
@@ -56,3 +59,11 @@ BalanceCheck('qe',C,TC,RUN) = QEX(C,'rest',XC,TC,TT);
 BalanceCheck('qm',C,TC,RUN) = QMX(C,'rest',XC,TC,TT);
 BalanceCheck('qx',C,TC,RUN) = QXX(C,XC,TC,TT);
 BalanceCheck('qxac',C,TC,RUN) = sum(A,QXACX(A,C,XC,TC,TT));
+
+
+* Checks and results for private transport modification
+HH_Energy('SATIM','TRA',C,TC,RUN) = Flow_IN_FTFuels('tppr',C,TC)*0.8;
+* 0.8 is the assumption that 20% of fuel is not consumed/paid for from households budgets: rental cars, govm, companies, etc.
+HH_Energy('SATIM','OTH',C,TC,RUN) = sum(FH,Flow_IN_FHFuels(FH,C,TC));
+HH_Energy('eSAGE','TRA',C,TC,RUN) = QINTX(C,'aprtr',XC,TC,TT);
+HH_Energy('eSAGE','OTH',CHEnergy,TC,RUN) = sum(H,QHX(CHEnergy,H,XC,TC,TT));

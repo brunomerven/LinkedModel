@@ -28,7 +28,7 @@
 
 * Run TIMES model
  execute ".\satm\%TIMESfolder%\ShowRunNumber.CMD"
-* execute ".\satm\%TIMESfolder%\RUNTIMES2.CMD"
+ execute ".\satm\%TIMESfolder%\RUNTIMES2.CMD"
  execute "echo --- Return to CGE model"
 
 *execute 'sleep 2';
@@ -38,7 +38,7 @@
 *--------------------------------------------------------------
 loop(MRUNCASE(RUN,TIMESCASE), put_utilities SATIM_Scen 'gdxin' / "%GDXfolder%",TIMESCASE.TL:20);
 *LOOP(MXCT(XC,XCT), put_utilities SATIM_Scen 'gdxin' / "..\satm\gams_wrkti\",XCT.TL:20);
- execute_load REG_OBJ PAR_NCAPL PAR_NCAPR PRC_RESID PRC_CAPACT PAR_NCAPR PAR_CAPL VARACT F_IN F_OUT NCAP_ILED OB_ICOST PAR_COMBALEM CST_FIXC CST_ACTC CST_INVC VAR_CAP UC_CAP;
+ execute_load COM_PROJ REG_OBJ PAR_NCAPL PAR_NCAPR PRC_RESID PRC_CAPACT PAR_NCAPR PAR_CAPL VARACT F_IN F_OUT NCAP_ILED OB_ICOST PAR_COMBALEM CST_FIXC CST_ACTC CST_INVC VAR_CAP UC_CAP;
 * VAR_RCAP;
 
 RESID(REG,MILESTONYR,PRC) = PRC_RESID(REG,MILESTONYR,PRC);
@@ -74,6 +74,8 @@ $BATINCLUDE interpolate TCST_FIXC 'REG' 'PRC' ",'0','0','0','0','0'" TC 'TCST_FI
 
  T_COMBALEM(REG,TC,COM) = PAR_COMBALEM(REG,TC,COM,'ANNUAL');
 $BATINCLUDE interpolate T_COMBALEM 'REG' 'COM' ",'0','0','0','0','0'" TC 'T_COMBALEM(REG,TC,COM)'
+
+$BATINCLUDE interpolate COM_PROJ 'REG' 'COM' ",'0','0','0','0','0'" TC 'COM_PROJ(REG,TC,COM)'
 
 
 * Attempt at putting parameter for results equal to variable:
