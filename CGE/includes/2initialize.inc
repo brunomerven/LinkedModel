@@ -120,9 +120,11 @@ PARAMETER
   CTA_EMRRX(A,RUN,X,T,TT)
 
 *fh: EV shock
- deltaqx(c,rw,run,x,t,tt)
- deltatx(c,rw,run,x,t,tt)
+ deltaqx(C,RW,RUN,X,T,TT)
+ deltatx(C,RW,RUN,X,T,TT)
 
+ thetax(A,C,RUN,T) yield of commodity C per unit of activity A
+ pacoalx(T,RUN) output price of acoal just for coal
 ;
 
  QFS00(F) = QFS0(F);

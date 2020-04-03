@@ -28,7 +28,7 @@
 
 * Run TIMES model
  execute ".\satm\%TIMESfolder%\ShowRunNumber.CMD"
- execute ".\satm\%TIMESfolder%\RUNTIMES2.CMD"
+* execute ".\satm\%TIMESfolder%\RUNTIMES2.CMD"
  execute "echo --- Return to CGE model"
 
 *execute 'sleep 2';
@@ -38,7 +38,7 @@
 *--------------------------------------------------------------
 loop(MRUNCASE(RUN,TIMESCASE), put_utilities SATIM_Scen 'gdxin' / "%GDXfolder%",TIMESCASE.TL:20);
 *LOOP(MXCT(XC,XCT), put_utilities SATIM_Scen 'gdxin' / "..\satm\gams_wrkti\",XCT.TL:20);
- execute_load REG_OBJ PAR_NCAPL PAR_NCAPR PRC_RESID PRC_CAPACT PAR_NCAPR PAR_CAPL VARACT F_IN F_OUT NCAP_ILED OB_ICOST PAR_COMBALEM CST_FIXC CST_ACTC CST_INVC VAR_CAP;
+ execute_load COM_PROJ REG_OBJ PAR_NCAPL PAR_NCAPR PRC_RESID PRC_CAPACT PAR_NCAPR PAR_CAPL VARACT F_IN F_OUT NCAP_ILED OB_ICOST PAR_COMBALEM CST_FIXC CST_ACTC CST_INVC VAR_CAP UC_CAP;
 * VAR_RCAP;
 
 RESID(REG,MILESTONYR,PRC) = PRC_RESID(REG,MILESTONYR,PRC);
@@ -74,6 +74,8 @@ $BATINCLUDE interpolate TCST_FIXC 'REG' 'PRC' ",'0','0','0','0','0'" TC 'TCST_FI
 
  T_COMBALEM(REG,TC,COM) = PAR_COMBALEM(REG,TC,COM,'ANNUAL');
 $BATINCLUDE interpolate T_COMBALEM 'REG' 'COM' ",'0','0','0','0','0'" TC 'T_COMBALEM(REG,TC,COM)'
+
+$BATINCLUDE interpolate COM_PROJ 'REG' 'COM' ",'0','0','0','0','0'" TC 'COM_PROJ(REG,TC,COM)'
 
 
 * Attempt at putting parameter for results equal to variable:
@@ -121,6 +123,9 @@ $offtext
  FLOW_IN_FSFuels(FS,C,TC,TT) = SUM(COM$MCOMC(COM,C),FLOW_IN_FS(FS,COM,TC));
  FLOW_OUT_FSFuels(FS,C,TC,TT) = SUM(COM$MCOMC(COM,C),FLOW_OUT_FS(FS,COM,TC));
 
+ FLOW_OUT_FSFactors(FS,F,TC,TT) = SUM(COM$MCOMF(COM,F),FLOW_OUT_FS(FS,COM,TC));
+
+
 *bm methane rich gas is currently a product of sasol which is accounted for in SATIM, but not in eSAGE so making this zero
  FLOW_OUT_FSFuels('petr','cngas',TC,TT) = 0;
 
@@ -134,6 +139,11 @@ $offtext
 *bm calc oil flow
  OIL_FLOW(RUN,TC) = SUM(PRC$MPRCFS(PRC,'petr'), TVACT(TC,PRC));
 
+*bm calc coal flow
+ COAL_FLOW(RUN,TC,'ccoal-low') = sum(FS,FLOW_IN_FSFuels(FS,'ccoal-low',TC,TT));
+ COAL_FLOW(RUN,TC,'ccoal-hgh') = sum(FS,FLOW_IN_FSFuels(FS,'ccoal-hgh',TC,TT));
+
+
 *bm not sure why yet but model goes unstable the second time round - need to look into it
 *IF(TT1(TT),
  EIntensity_FS(FS,C,T)$SFORE_X(FS,T) = FLOW_IN_FSFuels(FS,C,T,TT)/SFORE_X(FS,T);
@@ -145,7 +155,8 @@ $offtext
  FLOW_IN_FHFuels(FH,C,TC) = SUM(COM$MCOMC(COM,C),FLOW_IN_FH(FH,COM,TC));
 *UCONV_C_T2C(C);
 
-
+*bm calculating coal mining capacity based on consumption+exports)
+ COALMINCAP(TC) = sum(FS,FLOW_IN_FSFuels(FS,'ccoal-hgh',TC,TT))+sum(FS,FLOW_IN_FSFuels(FS,'ccoal-low',TC,TT))+sum(FH,FLOW_IN_FHFuels(FH,'ccoal-hgh',TC));
 
 * For households on transport
  FLOW_IN_FT(FT,COM,TC) = SUM(PRC$MPRCFT(PRC,FT), TVFLOWIN(COM,TC,PRC));
@@ -158,7 +169,8 @@ $offtext
  FLOW_IN_FHAllFuels(FH,C,TC) = FLOW_IN_FHFuels(FH,C,TC)+FLOW_IN_FTFHFuels(FH,C,TC);
 
 *!!! need to sort out public transport!!!
- EIntensity_FH(FH,C,TC)$TFHPOP_X(FH,TC) = FLOW_IN_FHAllFuels(FH,C,TC)/TFHPOP_X(FH,TC);
+ EIntensity_FH(FH,C,TC)$TFHPOP_X(FH,TC) = FLOW_IN_FHAllFuels(FH,C,TC);
+*/TFHPOP_X(FH,TC);
 
 *IF(TT1(TT),
 
@@ -221,7 +233,8 @@ LOOP((PRC,TC)$(TVNCAP(TC,PRC) AND NCAP_ILED('REGION1','2012',PRC) LT 0),
 
 * EFLOW('NAT',XC,TC,TT) = SUM(SUPELE, TVACT(TC,SUPELE))/3.6;
 * !!EFLOW now calculated from flow through transmission. When we include distributed generation we also need to include them in the calc
-ELC_FLOW(RUN,TC) = (TVACT(TC,'XAGRELC') + TVACT(TC,'XCOMELC') +TVACT(TC,'XINDELC') + TVACT(TC,'XRESELC') + TVACT(TC,'XTRAELC') + TVACT(TC,'XUPSELC'));
+ ELC_FLOW2(RUN,TC) = (TVACT(TC,'XAGRELC') + TVACT(TC,'XCOMELC') +TVACT(TC,'XINDELC') + TVACT(TC,'XRESELC') + TVACT(TC,'XTRAELC') + TVACT(TC,'XUPSELC'));
+ ELC_FLOW(RUN,TC) = sum(FS,FLOW_IN_FSFuels(FS,'celec',TC,TT))+sum(FH,FLOW_IN_FHAllFuels(FH,'celec',TC))-FLOW_IN_FSFuels('EXP','celec',TC,TT);
 
 *debug test
 *ELC_FLOW(RUN,'2012') = 764.7;
@@ -238,13 +251,15 @@ ELC_FLOW(RUN,TC) = (TVACT(TC,'XAGRELC') + TVACT(TC,'XCOMELC') +TVACT(TC,'XINDELC
 
 
 
-EIntensity_FS('elec',C,TC) = FLOW_IN_FSFuels('elec',C,TC,TT)/ELC_FLOW(RUN,TC);
-EIntensity_FS('hydr',C,TC)$FLOW_OUT_FSFuels('hydr','chydr',TC,TT) = FLOW_IN_FSFuels('hydr',C,TC,TT)/FLOW_OUT_FSFuels('hydr','chydr',TC,TT);
+ EIntensity_FS('elec',C,TC) = FLOW_IN_FSFuels('elec',C,TC,TT)/ELC_FLOW(RUN,TC);
+ EIntensity_FS('hydr',C,TC)$FLOW_OUT_FSFuels('hydr','chydr',TC,TT) = FLOW_IN_FSFuels('hydr',C,TC,TT)/FLOW_OUT_FSFuels('hydr','chydr',TC,TT);
 
 
 * ICAFSGR(C,FS,T,TT)$EIntensity_FS(FS,C,T-1) = EIntensity_FS(FS,C,T)/EIntensity_FS(FS,C,T-1);
 *BM+FH 201218: SETTING STARTING POINT FOR HYDROGEN
  ICAFSGR(C,FS,T,TT)$(EIntensity_FS(FS,C,T-1) GT 0.00001) = EIntensity_FS(FS,C,T)/EIntensity_FS(FS,C,T-1);
+
+
  ICAFSGR(C,'nf',T,TT) = min(1,ICAFSGR(C,'nf',T,TT));
 
 * ICAFSGR('cpetr_d','tranlp',T,TT) = 0.8;
@@ -276,8 +291,12 @@ EIntensity_FS('hydr',C,TC)$FLOW_OUT_FSFuels('hydr','chydr',TC,TT) = FLOW_IN_FSFu
  TCST_ELE_INV(RUN,TC) = TCST_ELE_I(RUN,TC) + SUM(XELC,TCST_INVC('REGION1',TC,XELC));
  QFEGY_GR(RUN,TC)$TCST_ELE_INV(RUN,TC-1) = TCST_ELE_INV(RUN,TC)/TCST_ELE_INV(RUN,TC-1);
 
- ECIntensity(RUN,TC) = TCST_ELE_INV(RUN,TC)/ELC_FLOW(RUN,TC);
- IFA_FEGY_GR(RUN,TC)$ECIntensity(RUN,TC-1) = ECIntensity(RUN,TC)/ECIntensity(RUN,TC-1);
+ FIntensity_FS('elec','fegy',TC) = TCST_ELE_INV(RUN,TC)/ELC_FLOW(RUN,TC);
+ FIntensity_FS('elec',FLAB,TC) = FLOW_OUT_FSFactors('elec',FLAB,TC,TT)/ELC_FLOW(RUN,TC);
+
+
+
+ IFAFSGR(F,FS,TC,TT)$FIntensity_FS(FS,F,TC-1) = FIntensity_FS(FS,F,TC)/FIntensity_FS(FS,F,TC-1);
 
 *sum the components of elec costs calcs:
  TCST_ELE(RUN,TC) = TCST_ELE_I(RUN,TC) + TCST_ELE_A(RUN,TC)+TCST_ELE_F(RUN,TC) + TCST_ELE_X(RUN,TC);

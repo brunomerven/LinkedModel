@@ -51,3 +51,27 @@ Links/store/
 Links/eSAM builder/desktop\.ini
 
 *.~xl
+
+*.png
+
+CGE_faaiqa/
+
+CGE_hh/
+
+CGE_hh\+transport/
+
+Coal Supply/
+
+private transport/
+
+Tableau_FDM/
+
+Tableau2/
+
+225a/
+
+CGE/includes/2simulation_loop_wEVadjust.inc
+
+CGE/includes/2simulation_loop_woEVadjust.inc
+
+CGE/includes/includes - Shortcut.lnk

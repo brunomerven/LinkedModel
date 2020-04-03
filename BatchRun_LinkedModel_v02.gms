@@ -20,10 +20,11 @@ $SETGLOBAL GDXoutfolder2 %workingfolder%GDXCGEout\
 *$SETGLOBAL referencerun REF-BU-CS-A
 *the older one: REFU-BU2_CS_A
 *5year run:
-$SETGLOBAL referencerun T3EV_BU
+*$SETGLOBAL referencerun T3EV_BU
+$SETGLOBAL referencerun REF_ANNUAL_BU
 
 *$SETGLOBAL referencerun PAMS_BFUEL
-$SETGLOBAL outputworkbook outputworkbook_v08.xlsx
+$SETGLOBAL outputworkbook outputworkbook_v09.xlsx
 
 *-------------------------------------------------------------------------------
 
@@ -51,6 +52,10 @@ SETS
   XPWR(PRC)                      power sector fuels
   TTCH(PRC)                      SATIM technology options
   TOUT                           SATIM fuel types
+
+  UC_N(*)                        List of names of all manual constraints
+  SIDE(*)                        LHS and RHS of an equation /LHS, RHS/
+
 
 * Fuel processes
   FUELP(PRC)                     TIMES Fuel Processes
@@ -165,6 +170,9 @@ PARAMETERS
   CST_INVC(REG,V,AY,PRC,XXX)     TIMES calculated annual investment costs
   CST_ACTC(REG,V,AY,PRC)         TIMES calculated annual activity costs
   CST_FIXC(REG,V,AY,PRC)         TIMES calculated annual fixed costs
+
+  UC_CAP(UC_N,SIDE,REG,AY,PRC)   TIMES multiplier of capacity variables
+
 
   OB_ICOST(REG,PRC,XXX,AY)       Interpolated investment cost from TIMES run
   OBICOST(REG,AY,PRC)            TIMES investment cost restructured for interpolation
@@ -368,7 +376,7 @@ PARAMETERS
 
 *4 Import sets and parameters from Base TIMES run-------------------------------
 $gdxin  %GDXfolder%%referencerun%.gdx
-$load PRC P COM DEM ALLYEAR S V ITEM OB_ICOST
+$load PRC P COM DEM ALLYEAR S V ITEM OB_ICOST UC_N
 $load DATAYEAR DM_YEAR MILESTONYR RTP B E
 $load MY_FYEAR MY_FIL2
 
@@ -469,6 +477,11 @@ $batinclude cge\includes\SATIMViz_init.inc
 * Oil and derivatives prices
  SIM_FUELP(FUELPO,RUN,MY)     = SIM_GOIL(RUN,MY) * XRATE(RUN,MY) * OCRFAC(FUELPO,'a') + OCRFAC(FUELPO,'b');
 
+* fixing HFO price to low price in 2015 because of new policies on use of HFO as a marine fuel
+ SIM_FUELP('PEXOHF',RUN,MY)     = SIM_FUELP('PEXOHF',RUN,'2015');
+ SIM_FUELP('IMPOHF',RUN,MY)     = SIM_FUELP('IMPOHF',RUN,'2015');
+
+
 * Natural Gas Techs, +1, +0.5 for GWL and GRL are the transport costs
 * the 0.95 for the export price is a royalty fee
 * shale: converting from 2012 $ to 2015 $ - 1.039
@@ -487,10 +500,10 @@ $batinclude cge\includes\SATIMViz_init.inc
 *-------------------------------------------------------------------------------
 
 *10 Preparation for stored output-----------------------------------------------
-$call    "gdxxrw i=%outputworkbook% o=SATMR2 index=index_E2G!a6 checkdate"
-$gdxin   SATMR2.gdx
-$loaddc Fuels Fuels2 Externalities PassengerRoad PassengerModes FreightRoad FreightModes
-$load mFuels mFuels2 mExt MFUELPWR
+*$call    "gdxxrw i=%outputworkbook% o=SATMR2 index=index_E2G!a6 checkdate"
+*$gdxin   SATMR2.gdx
+*$loaddc Fuels Fuels2 Externalities PassengerRoad PassengerModes FreightRoad FreightModes
+*$load mFuels mFuels2 mExt MFUELPWR
 
  Scalars
  EFVAL                 temporary values stored here
@@ -723,6 +736,11 @@ $gdxout %workingfolder%GDXCGEout\Run
 $unload calc
 $gdxout
 $offtext
+
+
+execute_unload "SATIM_OUTPUT.gdx" SATIM_OUTPUT
+execute 'gdxxrw.exe i=SATIM_OUTPUT.gdx o=%workingfolder%%outputworkbook% index=index_G2E!a6';
+
 
 *END OF BATCHRUN FILE
 *$offtext

@@ -21,7 +21,7 @@ Set
  atra(a)        /awtrp, aatrp/
  h1(h)          /hhd-0, hhd-1, hhd-2, hhd-3, hhd-4/
  h2(h)          /hhd-5, hhd-6, hhd-7/
- h3(h)          /hhd-8, hhd-91, hhd-92, hhd-93, hhd-94, hhd-95/
+ h3(h)          /hhd-8, hhd-9/
 
  fuel(c)       /ccoal-low, ccoal-hgh, ccoil, cngas, chydr, cpetr_p, cpetr_d, cpetr_o, celec/
 ;

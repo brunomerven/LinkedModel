@@ -4,9 +4,6 @@ LOOP(XC$(NOT fail),
 
 
     execute_load "mcdem_start.gdx" MFHHT SFORE_X TFHPOP_X SIM_DEMX PKMFH Passengerkm Tonkm;
-*    MFHHT(FH,H,'2045') = MFHHT(FH,H,'2040');
-*    MFHHT(FH,H,'2050') = MFHHT(FH,H,'2040');
-
 
 * Loop over TIMES model solve periods
   LOOP(TT$(NOT fail),
@@ -30,7 +27,19 @@ LOOP(XC$(NOT fail),
 if( not TT1(TT),
   execute 'gdxxrw.exe i=SATM\DMD_PRJ.xlsx o=mcdem2.gdx index=index_E2G!a6';
   execute_load "mcdem2.gdx" SIM_DEMX PKMFH Passengerkm Tonkm;
+
+
+* Adjust Transport Demand
+  LOOP(TC,
+        SIM_DEMX(TPPR,TC)$(SUM(H,QHX('cprtr',H,'base',TC-1,TT-1))) = SIM_DEMX(TPPR,TC-1)*SUM(H,QHX('cprtr',H,'base',TC,TT-1))/SUM(H,QHX('cprtr',H,'base',TC-1,TT-1));
 );
+* LOOP(TC,
+
+
+);
+*if( not TT1(TT),
+
+
 * Demand DDS File
     PUT  SIM_DEM_FILE;
     SIM_DEM_FILE.pc = 2;
@@ -56,6 +65,11 @@ $include cge\includes\2varinit.inc
 * Run SATIM
 $include cge\includes\2runTIMES.inc
 
+* make acoal output leontief - controlled by SATIM - see theta calcs below
+ ACET2('acoal') = YES;
+ ACET2('apetr') = YES;
+
+
 *Energy supply projection from TIMES
  TFLOW(A,TECHTYPE,RUN,TC,TT) = SUM(PRC$MPRCATYPE(PRC,A,TECHTYPE), TVACT(TC,PRC));
  TCAP(A,RUN,TC,TT) = SUM(PRC$MPRCA(PRC,A), TVCAP(TC,PRC));
@@ -68,10 +82,6 @@ $include cge\includes\2runTIMES.inc
 * PFLOW(TECHTYPE,XC,TC,TT) = TFLOW('APETR',TECHTYPE,RUN,TC,TT);
  PFLOW(TECHTYPE,XC,TC,TT) = sum(C,FLOW_OUT_FSFuels('petr',C,TC,TT));
 
-*Electricity and petroleum build plan projection
-*bm+fh 201118 removed - already in 2runtimes.inc !!!! note that ECAP and PCAP are also calculated in 2runTIMES, we need to clean this out
-* ECAPGR('nat',XC,TC,TT)$ECAP('nat',XC,TC-1,TT) = ECAP('nat',XC,TC,TT)/ECAP('nat',XC,TC-1,TT)-1;
-
 * Extract fuel inputs from SATIM
 
 * For elc and oil products (until the other sectors are aggregated in the same way)
@@ -80,21 +90,20 @@ $include cge\includes\2runTIMES.inc
 
 * do reverse mapping for industry sectors (excludes power and petroleum)
  ICAGR(CXEP,A,TC) = SUM(FSXEP$MFSA(FSXEP,A),ICAFSGR(CXEP,FSXEP,TC,TT));
+ IFAGR(F,A,TC) = SUM(FS$MFSA(FS,A),IFAFSGR(F,FS,TC,TT));
+
+*BM correction on power sector from freight demand for moving coal
+ ICAGR('cftrp-l','aelec',TC) = ICAGR('ccoal-low','aelec',TC);
+
 
 *   Loop over CGE model solve periods
   LOOP(TC$(NOT fail),
-
-*BM+FH 201218: SETTING STARTING POINT FOR HYDROGEN
- ica('chydr',A,'NAT')$(SUM(FSXEP$MFSA(FSXEP,A),EIntensity_FS(FSXEP,'chydr',TC-1)) LT 0.0001 and SUM(FSXEP$MFSA(FSXEP,A),EIntensity_FS(FSXEP,'chydr',TC)) GT 0.00001 AND ica('chydr',A,'NAT'))
-                         = SUM(FSXEP$MFSA(FSXEP,A),EIntensity_FS(FSXEP,'chydr',TC));
 
 *   CA calculate units of capital required given capacity from times (units not consistent with CGE)
     EAFXCAP(XC,TC,TT)$(EFX(TT,TC) AND ifa('FEGY','AELEC','nat')) = ifa('FEGY','AELEC','nat')*iva('AELEC','nat')*ECAP(XC,TC,TT);
 *fh 71218
 *bm+fh 201118 removed - already in 2runtimes.inc
     PAFXCAP(XC,TC,TT)$(EFX(TT,TC) AND ifa('FCAP','APETR','nat')) = ifa('FCAP','APETR','nat')*iva('APETR','nat')*PFLOW('oil',XC,TC,TT);
-*    PAFXCAP(RDNT,XC,TC,TT)$(EFX(TT,TC) AND ifa('FSAS','APETR',RDNT)) = ifa('FSAS','APETR',RDNT)*iva('APETR',RDNT)*PCAP(RDNT,XC,TC,TT);
-*    PAFXCAP('NAT',XC,TC,TT)$EFX(TT,TC)  = SUM(RDNT,PAFXCAP(RDNT,XC,TC,TT));
 
       IF(NOT T1(TC),
 
@@ -158,36 +167,14 @@ $ontext
         hpop('hhd-8' ) = hpop('hhd-8' ) * (1+(((tfhpop_x('hhd-he','2050')+tfhpop_x('hhd-hn','2050'))/(tfhpop_x('hhd-he','2012')+tfhpop_x('hhd-hn','2012')))**(1/(2050-2012))-1));
         hpop(hhd9)     = hpop(hhd9)     * (1+(((tfhpop_x('hhd-he','2050')+tfhpop_x('hhd-hn','2050'))/(tfhpop_x('hhd-he','2012')+tfhpop_x('hhd-hn','2012')))**(1/(2050-2012))-1));
 $offtext
+
+* phase out elc price differential over time - this should only apply to industry!!! - need to fix !!!
          IF(ord(TC) lt 8,
-*bm            betaca('acoal','ccoal-low')=betaca('acoal','ccoal-low')*1.14;
-*bm            betaca('acoal','ccoal-hgh')=betaca('acoal','ccoal-hgh')*1.14;
             tui(C,A,RD) = tui(C,A,RD)*.5;
          );
-*b added August 2014 to capture continuing trend of coal price increase due to increasing costs of picking "higher hanging" fruit
-*bm         IF(ord(TC) gt 7 and ord(TC) lt 19,
-*bm            betaca('acoal','ccoal-low')=betaca('acoal','ccoal-low')*1.085;
-*bm        );
-*bm          IF(ord(TC) gt 18 and ord(TC) lt 29,
-*bm            betaca('acoal','ccoal-low')=betaca('acoal','ccoal-low')*1.03;
-*bm        );
-*bm          IF(ord(TC) gt 28,
-*bm            betaca('acoal','ccoal-low')=betaca('acoal','ccoal-low')*1.015;
-*bm        );
 
 *       CA driven by previous year gdp growth (see bottom of TC loop)
         trnsfr(INS,ACNT) = trnsfr(INS,ACNT) * (1+TRNSFRGR(INS,ACNT,XC,TC));
-
-*       CA restrict supply of low quality coal (ccoal-low) in order to follow upward price move 2007-2012
-*        IF(ord(TC) lt 6,
-*            deltaca('acoal','ccoal-low')= deltaca('acoal','ccoal-low') + .03;
-*        );
-
-*        IF(ORD(TT) gt 1,
-
-* Using A different approach for ica
-*           ica(C,'APETR','NAT')$FLOW_INFuelsA('APETR',C,TC,TT-1) = FLOW_INFuelsA('APETR',C,TC,TT-1)/(EPROJ('APETR',XC,TC,TT-1)*UCONV_A_T2C('APETR'));
-*if(ECEMLINK(XC) gt 2,
-*
 
 
 *fh 291118: SANEDI-EV shocks
@@ -197,66 +184,74 @@ $offtext
   deltat(cm,rw) = deltat0(cm,rw);
 *  deltat('cvehi','rest') = deltat('cvehi','rest')*(deltatev('cvehi','rest',run,tc));
 
+
+*bm make ratio of coal outputs exogenous and control from SATIM outputs
+  theta('acoal','ccoal-low') = COAL_FLOW(RUN,TC,'ccoal-low')/sum(C,COAL_FLOW(RUN,TC,C))*(1-(theta('acoal','cmore')+theta('acoal','cmine')));
+  theta('acoal','ccoal-hgh') = COAL_FLOW(RUN,TC,'ccoal-hgh')/sum(C,COAL_FLOW(RUN,TC,C))*(1-(theta('acoal','cmore')+theta('acoal','cmine')));
+
+* adjust ica and ifa for acoal based on previous pacoal and new theta
+  pacoalx(TC,RUN) = sum(CCOAL,theta('acoal',CCOAL)*pq0(CCOAL))/sum(CCOAL,theta('acoal',CCOAL));
+*  ICAGR(C,'acoal',TC)$pacoalx(TC-1,RUN) = pacoalx(TC,RUN)/pacoalx(TC-1,RUN);
+*  IFAGR(F,'acoal',TC)$pacoalx(TC-1,RUN) = pacoalx(TC,RUN)/pacoalx(TC-1,RUN);
+
+
+
+* make adjustments to ica
+
+*BM+FH 201218: SETTING STARTING POINT FOR HYDROGEN
+ ica('chydr',A,'NAT')$(SUM(FSXEP$MFSA(FSXEP,A),EIntensity_FS(FSXEP,'chydr',TC-1)) LT 0.0001 and SUM(FSXEP$MFSA(FSXEP,A),EIntensity_FS(FSXEP,'chydr',TC)) GT 0.00001 AND ica('chydr',A,'NAT'))
+                         = SUM(FSXEP$MFSA(FSXEP,A),EIntensity_FS(FSXEP,'chydr',TC));
+
+* calculate ica change for private passenger. This needs to be generalised to other household end-uses
+  EHIntensity(C,'aprtr',TC) = FLOW_IN_FTFuels('tppr',C,TC)/sum(TPPR,COM_PROJ('REGION1',TC,TPPR));
+
+
+*BM 190320: SETTING STARTING POINT FOR ICA private transport
+ ica('celec','aprtr','NAT')$(EHIntensity('celec','aprtr',TC-1) LT 0.0001 and EHIntensity('celec','aprtr',TC) GT 0.00001)
+                         = EHIntensity('celec','aprtr',TC)/EHIntensity('cpetr_p','aprtr',TC)*ica('cpetr_p','aprtr','NAT');
+
+  icagr(C,'aprtr',TC)$EHIntensity(C,'aprtr',TC-1) = EHIntensity(C,'aprtr',TC)/EHIntensity(C,'aprtr',TC-1);
+
+
+
+
+
+
   ica(C,A,'NAT')$ICAGR(C,A,TC) = ica(C,A,'NAT')*ICAGR(C,A,TC);
 
 
-*sr/bm/fh .L experiment
-*BM+FH 201218: SETTING STARTING POINT FOR HYDROGEN
-*  QF.L(F,'ahydr',RD)$(ICAGR('chydr','atrps',TC)) = QF.L(F,'ahydr',RD)*ICAGR('chydr','atrps',TC);
-*  QA.L('ahydr')$(ICAGR('chydr','atrps',TC)) = QA.L('ahydr')*ICAGR('chydr','atrps',TC);
-*  QA.L('ahydr')$(HCAP(XC,TC,TT) gt 0.00001) = HCAP(XC,TC,TT);
+  if(ORD(TC) gt 28,ica('ccoal-low','apetr','NAT') = 0);
+
+  if(ORD(TC) gt 1,ica('ccoal-low','acoal','NAT') = 0);
+
+
   QA.L('ahydr')$(HCAP(XC,TC,TT) gt 0.00001) = FLOW_OUT_FSFuels('hydr','chydr',TC,TT);
 
-
-
+*fh 12/11/19: changing from LES to CD
+$ontext
 * for Households
   gammam(C,H)$gammamgr(C,H,TC,TT) = gammam(C,H)*gammamgr(C,H,TC,TT);
 
 *bm work in progress          gammam(C,H)$(gammagr(C,H,TC) and not(gammam(C,H)) =
 
 *);
-
-
-*       ENERGY: Recalibrate electricity sector coefficients based on changing supply composition
-* Power Sector
-$ontext
-          iva('AELEC','NAT')
-                 = SUM(RDNT, iva0('AELEC',RDNT)*EFLOW(RDNT,XC,TC,TT)/EFLOW('nat',XC,TC,TT));
-          ifa(F,'AELEC','NAT')
-                 = SUM(RDNT, ifa0(F,'AELEC',RDNT)*iva0('AELEC',RDNT)*EFLOW(RDNT,XC,TC,TT)/SUM(RDNTP, iva0('AELEC',RDNTP)*EFLOW(RDNTP,XC,TC,TT)));
-          ica(C,'AELEC','NAT')
-                 = SUM(RDNT, ica0(C,'AELEC',RDNT)*EFLOW(RDNT,XC,TC,TT)/EFLOW('nat',XC,TC,TT));
 $offtext
+
 *fh
          EFLOW(TECHTYPE,XC,TC,TT) = max(EFLOW(TECHTYPE,XC,TC,TT),0.1);
 *          EFLOW(RDNT,XC,TC,TT) = max(EFLOW(RDNT,XC,TC,TT),1);
 
 
-*bm 20180222
-          ifa('fegy','aelec','nat') = ifa('fegy','aelec','nat')*IFA_FEGY_GR(RUN,TC);
+*b, apply change to IFA
+
+          ifa(F,A,'nat') = ifa(F,A,'nat')*IFAGR(F,A,TC);
+
+
+         ICA('celec','AHYDR','nat')$(SUM(A,ICA('CHYDR',A,'nat')) GT 0.001) = EIntensity_FS('hydr','celec',TC);
+         ICA('cngas','AHYDR','nat')$(SUM(A,ICA('CHYDR',A,'nat')) GT 0.001 and EIntensity_FS('hydr','cngas',TC)) = EIntensity_FS('hydr','cngas',TC);
 
 
 
-
-$ontext
-          iva('AELEC','NAT')
-                 = SUM(RDNT, iva0('AELEC',RDNT)*EFLOW(RDNT,XC,TC,TT))/EFLOW('nat',XC,TC,TT);
-          ifa(F,'AELEC','NAT')
-                 = SUM(RDNT, ifa0(F,'AELEC',RDNT)*iva0('AELEC',RDNT)*EFLOW(RDNT,XC,TC,TT))/SUM(RDNTP, iva0('AELEC',RDNTP)*EFLOW(RDNTP,XC,TC,TT));
-          ica(C,'AELEC','NAT')
-                 = SUM(RDNT, ica0(C,'AELEC',RDNT)*EFLOW(RDNT,XC,TC,TT))/EFLOW('nat',XC,TC,TT);
-
-
-* Oil supply sector (refineries)
-* The approach used to calculate ica in the elc supply didn't work that well for refineries
-*$ontext
-          iva('APETR','NAT')
-                 = SUM(RDNT, iva0('APETR',RDNT)*PFLOW(RDNT,XC,TC,TT)/PFLOW('nat',XC,TC,TT));
-          ifa(F,'APETR','NAT')
-                 = SUM(RDNT, ifa0(F,'APETR',RDNT)*iva0('APETR',RDNT)*PFLOW(RDNT,XC,TC,TT)/SUM(RDNTP, iva0('APETR',RDNTP)*PFLOW(RDNTP,XC,TC,TT)));
-          ica(C,'APETR','NAT')
-                 = SUM(RDNT, ica0(C,'APETR',RDNT)*PFLOW(RDNT,XC,TC,TT)/PFLOW('nat',XC,TC,TT));
-$offtext
 *bm/sr/fh added this to save model from crashing from demand for ccoal-low disapearing completely.
           ica('ccoal-low',A,'NAT')$ica0('ccoal-low',A,'NAT') = max(ica('ccoal-low',A,'NAT'),0.0004);
           ica('ccoal-low','ahydr','NAT') = 0.00000001;
@@ -285,34 +280,29 @@ $offtext
 
 
          AFX('ACOIL',RD) = NO;
-*         AFX('AHYDR',RD)$(SUM(A,ICA('CHYDR',A,'nat')) GT 0.001) = YES;
 
-*bm setting capacity of oil production to be linked to production from existing GTL plant
-*         AFX('ACOIL',RD)$(NOT T1(TC)) = YES;
-*         AFXGR('ACOIL','NAT',XC,TC)$TVACT(TC,'UGTLGICCO-E') = TVACT(TC,'UGTLGICCO-E')/TVACT(TC-1,'UGTLGICCO-E')-1;
-
-*         ICA('celec','AHYDR','nat') = 0.079;
-*         ICA('cngas','AHYDR','nat') = 1.171;
-
-
-
-         ICA('celec','AHYDR','nat')$(SUM(A,ICA('CHYDR',A,'nat')) GT 0.001) = EIntensity_FS('hydr','celec',TC);
-         ICA('cngas','AHYDR','nat')$(SUM(A,ICA('CHYDR',A,'nat')) GT 0.001 and EIntensity_FS('hydr','cngas',TC)) = EIntensity_FS('hydr','cngas',TC);
 
 *bm 05062019          AFXGR('AELEC','NAT',XC,TC)$EFX(TT,TC) = EAFXCAP(XC,TC,TT)/EAFXCAP(XC,TC-1,TT)- 1;
-          AFXGR('AELEC','NAT',XC,TC)$EFX(TT,TC) = QFEGY_GR(RUN,TC)- 1;
+          AFXGR('aelec','NAT',XC,TC)$EFX(TT,TC) = QFEGY_GR(RUN,TC)- 1;
 
-          AFXGR('AELEC','NAT',XC,TC)$(NOT EFX(TT,TC) AND QFSUPX('FEGY',XC,TC-1,TT) LT .9) = -natdrate;
+          AFXGR('aelec','NAT',XC,TC)$(NOT EFX(TT,TC) AND QFSUPX('FEGY',XC,TC-1,TT) LT .9) = -natdrate;
 
 
 *bmfh coal sector
-*          AFX('ACOAL',RD)$EFX(TT,TC) = YES;
+          AFX('acoal',RD)$EFX(TT,TC) = YES;
+
 
           CCAP(TC,TT) = sum(C,FLOW_OUT_FSFUELS('coal',C,TC,TT));
-*          AFXGR('ACOAL','NAT',XC,TC)$CCAP(TC-1,TT) = CCAP(TC,TT)/CCAP(TC-1,TT)-1;
+          AFXGR('ACOAL','NAT',XC,TC)$(COALMINCAP(TC-1) and pacoalx(TC-1,RUN)) = (COALMINCAP(TC)/COALMINCAP(TC-1)*pacoalx(TC,RUN)/pacoalx(TC-1,RUN))-1;
+
+*bm cap decrease to 5%
+*          if(TT1(TT), AFXGR('ACOAL','NAT',XC,TC)$(AFXGR('ACOAL','NAT',XC,TC) LT -.05) = -.05);
+*          AFXGR('ACOAL','NAT',XC,TC)$(AFXGR('ACOAL','NAT',XC,TC) LT -.05) = -.05;
+
+
           QE.FX('ccoal-hgh','REST')$FLOW_IN_FSFuels('EXP','ccoal-hgh',TC-1,TT) = QE.L('ccoal-hgh','REST')*FLOW_IN_FSFuels('EXP','ccoal-hgh',TC,TT)/FLOW_IN_FSFuels('EXP','ccoal-hgh',TC-1,TT) ;
 
-*          AFLEO('ACOAL')$(NOT T1(TC)) = YES;
+          AFLEO('ACOAL')$(NOT T1(TC)) = YES;
 
 
 
@@ -323,15 +313,15 @@ $offtext
            AFXGR('APETR','NAT',XC,TC)$EFX(TT,TC) = PAFXCAP(XC,TC,TT)/PAFXCAP(XC,TC-1,TT)- 1;
 
 *FH 71218
-           AFXGR('APETR','NAT',XC,TC)$(NOT EFX(TT,TC) AND QFSUPX('FCAP',XC,TC-1,TT) LT .9) = -natdrate;
+*           AFXGR('APETR','NAT',XC,TC)$(NOT EFX(TT,TC) AND QFSUPX('FCAP',XC,TC-1,TT) LT .9) = -natdrate;
 *           AFXGR('APETR','NAT',XC,TC)$(NOT EFX(TT,TC) AND QFSUPX('FSAS',XC,TC-1,TT) LT .9) = -natdrate;
-           AFXGR('APETR','NAT',XC,'2044') = 0;
-           AFXGR('APETR','NAT',XC,'2045') = 0;
-           AFXGR('APETR','NAT',XC,'2046') = 0;
-           AFXGR('APETR','NAT',XC,'2047') = 0;
-           AFXGR('APETR','NAT',XC,'2048') = 0;
-           AFXGR('APETR','NAT',XC,'2049') = 0;
-           AFXGR('APETR','NAT',XC,'2050') = 0;
+*           AFXGR('APETR','NAT',XC,'2044') = 0;
+*           AFXGR('APETR','NAT',XC,'2045') = 0;
+*           AFXGR('APETR','NAT',XC,'2046') = 0;
+*           AFXGR('APETR','NAT',XC,'2047') = 0;
+*           AFXGR('APETR','NAT',XC,'2048') = 0;
+*           AFXGR('APETR','NAT',XC,'2049') = 0;
+*           AFXGR('APETR','NAT',XC,'2050') = 0;
 
 *           QE.FX('cpetr_o','REST')$FLOW_IN_FSFuels('EXP','cpetr_o',TC-1,TT) = QE.L('cpetr_o','REST')*FLOW_IN_FSFuels('EXP','cpetr_o',TC,TT)/FLOW_IN_FSFuels('EXP','cpetr_o',TC-1,TT);
 *           QE.FX('cpetr_d','REST') = FLOW_IN_FSFuels('EXP','cpetr_d',TC,TT);
@@ -359,12 +349,19 @@ $offtext
 *BM+FH 201218: SETTING STARTING POINT FOR HYDROGEN
 * QF.L('FCAP','AHYDR','NAT')$(NOT HCAP(XC,TC,TT)) =  QF.L('FCAP','AHYDR','NAT')*(1+RKAP('FCAP','altrp_f','NAT'));
 * QF.L('FCAP','AHYDR','NAT')$(HCAP(XC,TC,TT) GT 0.00001) = ifa('FCAP','AHYDR','NAT')*iva('AHYDR','NAT')*FLOW_OUT_FSFuels('hydr','chydr',TC,TT);
- QF.L(F,'AHYDR','NAT')$(HCAP(XC,TC,TT) GT 0.00001) = ifa(F,'AHYDR','NAT')*iva('AHYDR','NAT')*FLOW_OUT_FSFuels('hydr','chydr',TC,TT);
+* QF.L(F,'AHYDR','NAT')$(HCAP(XC,TC,TT) GT 0.00001) = ifa(F,'AHYDR','NAT')*iva('AHYDR','NAT')*FLOW_OUT_FSFuels('hydr','chydr',TC,TT);
+
+*bm hydrogen not in public transport in SAM so leaving it out for now
+ QF.L(F,'AHYDR','NAT')$(HCAP(XC,TC,TT) GT 0.00001) = ifa(F,'AHYDR','NAT')*iva('AHYDR','NAT')*FLOW_IN_FSFuels('tranlf','chydr',TC,TT);
+
+
 *bm set reasonable starting value for QVA otherwise wfdist goes -ve.
- QVA.L('AHYDR','NAT')$(HCAP(XC,TC,TT) GT 0.00001) = sum(F,QF.L(F,'AHYDR','NAT'))*0.5;
+ QVA.L('AHYDR','NAT')$(HCAP(XC,TC,TT) GT 0.00001) = sum(F,QF.L(F,'AHYDR','NAT'));
  PVA.L('AHYDR','NAT')$(HCAP(XC,TC,TT) GT 0.00001) = 1;
 
- QINTA.L('AHYDR','NAT')$(HCAP(XC,TC,TT) GT 0.00001) = FLOW_OUT_FSFuels('hydr','CHYDR',TC,TT);
+* QINTA.L('AHYDR','NAT')$(HCAP(XC,TC,TT) GT 0.00001) = FLOW_OUT_FSFuels('hydr','CHYDR',TC,TT);
+ QINTA.L('AHYDR','NAT')$(HCAP(XC,TC,TT) GT 0.00001) = FLOW_IN_FSFuels('tranlf','CHYDR',TC,TT);
+
  QINT.L(C,'AHYDR')$(HCAP(XC,TC,TT) GT 0.00001) = ica(C,'AHYDR','NAT')*QINTA.L('AHYDR','NAT');
 
 
@@ -442,6 +439,11 @@ $include cge\includes\2capital.inc
 
 *       Total factor supply
         QFS.L(F) = SUM((RD,A), QF.L(F,A,RD));
+
+
+
+
+
       );
 *     end NOT T1(TC) loop
 
@@ -463,15 +465,22 @@ $offtext
 *       CA add tax adjustment variable for electricity
 *       ENERGY: Adjust fixed electricity price
 
-        PQ.FX('CELEC') = EPRICE(TC,TT);
-        TQELEC.LO('CELEC') = -INF;
-        TQELEC.UP('CELEC') = +INF;
+*        PQ.FX('CELEC') = EPRICE(TC,TT);
+*        TQELEC.LO('CELEC') = -INF;
+*        TQELEC.UP('CELEC') = +INF;
 
 
 *bm set hydrogen price to diesel price based on SATIM
 *        PQ.FX('CHYDR')$(SUM(A,ICA('CHYDR',A,'nat')) GT 0.001) = PQ.L('cpetr_d')*1.7;
 *        TQELEC.LO('CHYDR')$(SUM(A,ICA('CHYDR',A,'nat')) GT 0.001) = -INF;
 *        TQELEC.UP('CHYDR')$(SUM(A,ICA('CHYDR',A,'nat')) GT 0.001) = +INF;
+
+*bm to recalc household budget shares
+$include cge\includes\EnergyGoodsBudgetAllocation.inc
+
+
+*bm to recalc household budget shares
+$include cge\includes\BudgetShare_Recalc.inc
 
 
 $ontext
@@ -523,8 +532,8 @@ $offtext
       QF.UP('FCAP',A,RD)$QF0('FCAP',A,RD)=+INF;
       QF.LO('FCAP',A,RD)$QF0('FCAP',A,RD)=-INF;
 
-*bm
-
+*bm test aprtr
+*  iva('aprtr','nat') = 0;
 
 
       SOLVE standcge USING MCP ;

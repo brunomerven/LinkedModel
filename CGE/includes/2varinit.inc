@@ -49,6 +49,7 @@
  TAADJ.L                = TAADJ0;
  TABS.L                 = TABS0;
  TAPS.L                 = TAPS0;
+ theta(A,C)             = theta0(A,C);
  TQADJ.L                = TQADJ0;
  TQ.L(C)                = TQ0(C);
  TQPS.L                 = TQPS0;
@@ -117,7 +118,7 @@
  QE.FX('cptrp-o','REST') = QE0('cptrp-o','REST') ;
 
 
-* CERES('ccoal-low')=YES;
+ CERES('ccoal-low')=YES;
 
 
 
@@ -142,7 +143,8 @@
  CERES('cpetr_o')=YES;
 * QE.FX('cpetr_o','REST') = QE0('cpetr_o','REST') ;
 
-
+*bm setting acoal coal aggregate price
+ pacoalx(T1,RUN) =  sum(CCOAL,theta0('acoal',CCOAL)*pq0(CCOAL))/sum(CCOAL,theta0('acoal',CCOAL));
 
 
  pwebar(C,RW) = PWE0(C,RW);
@@ -229,8 +231,30 @@ betaca(A,C)=1;
  PCAP(X,TC,TT) = 0;
  HCAP(X,TC,TT) = 0;
 
- ICAGR(C,A,TC) = 0;
- gammamgr(C,H,TC,TT) = 0;
+ ICAGR(C,A,TC) = 1;
+ ICAFSGR(C,FS,TC,TT) = 1;
+ IFAGR(F,A,TC) = 1;
+ IFAFSGR(F,FS,TC,TT) = 1;
+
+ gammamgr(C,H,TC,TT) = 1;
 
  deltaq(cm,rw) = deltaq0(cm,rw);
  deltat(cm,rw) = deltat0(cm,rw);
+
+
+
+
+
+* budget share aspects
+* initialise budgetshare template
+DistanceMatrix(H,HP,TC) = 0;
+DistUpper(H,TC) = 0;
+DistLower(H,TC) = 0;
+TmpMin(H,TC) = 0;
+CUN(H,HP,TC) = No;
+CLN(H,HP,TC) = No;
+
+BudShare0(C,H,TC) = BUDSHR(C,H);
+
+BudShareNonEnergy(H,T1) =  1-sum(CHEnergy,BudShare0(CHEnergy,H,T1));
+

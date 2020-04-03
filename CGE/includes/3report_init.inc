@@ -184,11 +184,6 @@ SETS
  hh('xPOOR')=no;
  hh('xNPOOR')=no;
  hh('xNP40')=no;
- hh('xxhhd-9-1 ')=no;
- hh('xxhhd-9-21')=no;
- hh('xxhhd-9-22')=no;
- hh('xxhhd-9-23')=no;
- hh('xxhhd-9-24')=no;
 
 SET
  CASE(RUN)

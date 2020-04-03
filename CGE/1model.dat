@@ -204,7 +204,9 @@ $INCLUDE includes\1sambal.inc
 *Set default values for missing elasticities
  AELASTAB(C,AELAS)$(NOT AELASTAB(C,AELAS)) = 3.0;
  DELASTAB(ARD,DELAS)$(NOT DELASTAB(ARD,DELAS)) = 1.2;
- YELASTAB(C,H)$(NOT YELASTAB(C,H)) = 1.0;
+*fh 12/11/19: changing from LES to CD
+* YELASTAB(C,H)$(NOT YELASTAB(C,H)) = 1.0;
+ YELASTAB(C,H) = 1.0;
 
 *Other household consumption elasticities
  HELAS(A,H) =  1.0;
